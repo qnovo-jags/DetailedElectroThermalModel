@@ -1,6 +1,6 @@
 %This file creates the electrical model forward coupled with thermal model
 clc
-clear all;
+%clear all;
 close all;
 
 modelName = 'mainModel';
@@ -10,40 +10,42 @@ if bdIsLoaded(modelName)
 end
 new_system(modelName);
 open_system(modelName);
+load_system(modelName)
+%parameterSet
 
 load_system('coolantFlow_lib')
 
 createElectricalModel
-
-solverBlock = [modelName, '/SolverConfig'];
-add_block('nesl_utility/Solver Configuration', solverBlock,...
-    "Position", [150, 100, 200, 120]);
-
-cyclerBlock = [modelName, '/Cycler'];
-add_block('batt_lib/Cyclers/Cycler', cyclerBlock);
-
-constantCurrent = [modelName, '/ConstantCurrent'];
-add_block('fl_lib/Physical Signals/Sources/PS Constant', constantCurrent)
-
-constant1 = [modelName, '/Constant1'];
-add_block('fl_lib/Physical Signals/Sources/PS Constant',constant1, ...
-    "Position", [50, 100, 70, 120])
-
-add_line(modelName, 'Constant1/RConn 1', 'Cycler/LConn 3')
-add_line(modelName, 'ConstantCurrent/RConn 1', 'Cycler/LConn 1')
-
-add_line(modelName, 'Cycler/RConn 1', 'Module1/LConn 1', 'autorouting', 'on')
-add_line(modelName, 'Cycler/RConn 2', 'Module32/RConn 1', 'autorouting', 'on')
-
-add_block('fl_lib/Electrical/Electrical Elements/Electrical Reference', ...
-    [modelName '/ElectricalRef'], ...
-    'Position', [680, 800, 700,820]);
-
-add_line(modelName, 'ElectricalRef/LConn 1', 'Module32/RConn 1')
-add_line(modelName, 'SolverConfig/RConn 1', 'Cycler/RConn 2')
 
 createThermalModel
 
 load_system('algebraicManip_lib')
 
 electricalToThermal(modelName)
+
+
+for i = 1:32
+    probePath = [modelName, sprintf('/TempProbeBlock%d', i)];
+    targetBlock = [modelName, sprintf('/ThermalMassBatteries%d', i)];
+    
+    % Add probe block
+    add_block('nesl_utility/Probe', probePath);
+    add_block('simulink/Commonly Used Blocks/Terminator',sprintf('%s/Terminator%d', modelName, i))
+    % Bind probe and set variable to probe
+    simscape.probe.setBoundBlock(probePath, targetBlock);
+    simscape.probe.setVariables(probePath, ["M.T"]);
+    
+    add_line(modelName, sprintf('TempProbeBlock%d/1', i), sprintf('Terminator%d/1', i))
+    % Get output line handle
+    portHandles = get_param(probePath, 'PortHandles');
+    lineHandle = get_param(portHandles.Outport, 'Line');
+    
+    % Set custom signal name on the output line
+    customSignalName = sprintf('T%d', i);
+    set_param(lineHandle, 'Name', customSignalName);
+end
+
+set_param(modelName, 'SimscapeLogType', 'all')  
+
+set_param(modelName, 'StartTime', '0', 'StopTime', '5000');
+save_system(modelName, "mainModel.slx")

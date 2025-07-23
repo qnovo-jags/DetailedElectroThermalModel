@@ -35,6 +35,10 @@ for i = 1:32
         'ShowName', 'off');
     set_param(blockPath, 'BackgroundColor', 'blue');
     set_param(blockPath, 'Orientation', 'down');
+    set_param(blockPath, 'mass', 'massCoolant')
+    set_param(blockPath, 'mass_unit', 'kg')
+    set_param(blockPath, 'sp_heat', 'CpCoolant')
+    set_param(blockPath, 'sp_heat_unit', 'J/(K*kg)') 
 end
 %%
 %Thermal Masses : Cooling Plate Hot Channels 
@@ -45,6 +49,10 @@ for i = 1:32
         'ShowName', 'off');
     set_param(blockPath, 'BackgroundColor', 'red');
     set_param(blockPath, 'Orientation', 'up');
+    set_param(blockPath, 'mass', 'massCoolant')
+    set_param(blockPath, 'mass_unit', 'kg')
+    set_param(blockPath, 'sp_heat', 'CpCoolant')
+    set_param(blockPath, 'sp_heat_unit', 'J/(K*kg)') 
 end
 %%
 %Thermal masses : Modules
@@ -54,6 +62,10 @@ for i = 1:32
         sprintf('%s/ThermalMassBatteries%d', modelName, i), 'Position',thermalReferencePosition+getBlockPosition(i)+[10, -600, 10, -600]);
     set_param(blockPath, 'BackgroundColor', 'yellow');
     set_param(blockPath, 'Orientation', 'up');
+    set_param(blockPath, 'mass', 'massModule')
+    set_param(blockPath, 'mass_unit', 'kg')
+    set_param(blockPath, 'sp_heat', 'CpModule')
+    set_param(blockPath, 'sp_heat_unit', 'J/(K*kg)') 
 end
 
 %% %Thermal connections between cooling channels 
@@ -61,7 +73,7 @@ end
 advectiveCoeff = [modelName, '/AdvectiveCoeff'];
 add_block('fl_lib/Physical Signals/Sources/PS Constant',advectiveCoeff, ...
     "Position", thermalReferencePosition+[0, 600, 30, 630])
-set_param(advectiveCoeff, 'constant', '30')
+set_param(advectiveCoeff, 'constant', 'advectiveCoefficient')
 set_param(advectiveCoeff, "constant_unit", 'W/K')
 
 % Add Custom Thermal Block (heat flow due to advection) between cooling channels
@@ -72,6 +84,7 @@ coolantBlock = sprintf('%s/Coolant%s%d', modelName, "hotCoolConnect", ...
 add_block('coolantFlow_lib/CoolantFlow2to3', coolantBlock,...
     'Position',thermalReferencePosition+getBlockPosition(17) , ...
     'ShowName', 'off','Orientation','up')
+
 add_line(modelName, 'CoolanthotCoolConnect63/LConn2', 'ThermalMassCPCC17/LConn 1');
 add_line(modelName, 'CoolanthotCoolConnect63/LConn3', 'ThermalMassCPHC17/LConn 1');
 add_line(modelName,'AdvectiveCoeff/RConn 1','CoolanthotCoolConnect63/LConn1', 'autorouting', 'on');
@@ -86,8 +99,29 @@ createThermalConnectionsTubeModule(modelName, "CPHC", thermalReferencePosition)
 createThermalConnectionsModuleAmbient(modelName, thermalReferencePosition)
 
 %% %Boundary conditions for coolant inlet and outlet
+coolantTempSource = sprintf('%s/Coolant%s', modelName, "TempSource");
+add_block('fl_lib/Thermal/Thermal Sources/Temperature Source', ...
+    coolantTempSource, 'Position', thermalReferencePosition+getBlockPosition(29)+[100, 0, 100, 0]);
+set_param(coolantTempSource, 'Temperature','coolantTempSourceTemperature')
 
+coolantBC1 = sprintf('%s/Coolant%s%d', modelName, "BC", 1);
+add_block('coolantFlow_lib/CoolantFlow2to3', coolantBC1,...
+    'Position',thermalReferencePosition+getBlockPosition(29)+[50, 0, 50, 0] , ...
+    'ShowName', 'off','Orientation','up')
 
+coolantBC2 = sprintf('%s/Coolant%s%d', modelName, "BC", 2);
+add_block('coolantFlow_lib/CoolantFlow2to3', coolantBC2,...
+    'Position',thermalReferencePosition+getBlockPosition(29)+[50, 50, 50, 50] , ...
+    'ShowName', 'off','Orientation','up')
+
+add_line(modelName, 'CoolantBC1/LConn2','CoolantTempSource/LConn 1','autorouting','on')
+add_line(modelName, 'CoolantBC1/LConn3', 'ThermalMassCPCC29/LConn 1','autorouting','on')
+
+add_line(modelName, 'CoolantBC2/LConn2', 'ThermalMassCPHC29/LConn 1','autorouting','on')
+add_line(modelName, 'CoolantBC2/LConn3', 'CoolantTempSource/LConn 1','autorouting','on')
+
+add_line(modelName,'AdvectiveCoeff/RConn 1','CoolantBC1/LConn1', 'autorouting', 'on');
+add_line(modelName,'AdvectiveCoeff/RConn 1','CoolantBC2/LConn1', 'autorouting', 'on');
 %%
 %Create a controlled heat flow rate source to be fed from joule heating
 %calculations

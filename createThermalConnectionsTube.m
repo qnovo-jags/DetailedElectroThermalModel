@@ -20,7 +20,7 @@ for i = 1:length(h_connection_list)
     add_block('coolantFlow_lib/CoolantFlow2to3', coolantBlock,...
         'Position',thermalReferencePosition+(getBlockPosition(next_section)+getBlockPosition(current_section))/2+offset , ...
         'ShowName', 'off','Orientation','up')
-    
+
     % Create strings for the blocks you want to connect
     thermalMass_i   = sprintf('ThermalMass%s%d', suffix, next_section);
     thermalMass_ip1 = sprintf('ThermalMass%s%d',  suffix, current_section);

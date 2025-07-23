@@ -2,6 +2,7 @@ function createThermalConnectionsModuleAmbient(modelName,thermalReferencePositio
 %UNTITLED2 Summary of this function goes here
 %   Detailed explanation goes here
 
+
 add_block('fl_lib/Thermal/Thermal Elements/Thermal Reference', sprintf('%s/ThermalReference', modelName),...
     "Position", thermalReferencePosition + [0, 0, 30, 30]);
 add_block('fl_lib/Thermal/Thermal Sources/Controlled Temperature Source', sprintf('%s/TempSource', modelName),...
@@ -11,7 +12,7 @@ add_line(modelName, 'ThermalReference/LConn 1', 'TempSource/RConn 2')
 constantTemp = [modelName, '/ConstantTemp'];
 add_block('fl_lib/Physical Signals/Sources/PS Constant',constantTemp, ...
     "Position", thermalReferencePosition+[50, 100, 70, 120])
-set_param(constantTemp,'constant','300' )
+set_param(constantTemp,'constant','AmbientTemperature' )
 add_line(modelName, 'ConstantTemp/RConn 1', 'TempSource/RConn 1')
 
 for i = 1:1:32
@@ -20,6 +21,10 @@ for i = 1:1:32
         'Position',thermalReferencePosition+getBlockPosition(i)+[0, -550, 0, -550] , ...
         'ShowName', 'off');
     set_param(resBlock, 'Orientation', 'right');
+    
+    set_param(resBlock, 'resistance',sprintf('thermalResistanceModuleToAmbient_%d', mod(i, 4)));
+    set_param(resBlock, 'resistance_unit', 'K/W')
+
     % Create strings for the blocks you want to connect
     thermalMass_i_battery = sprintf('ThermalMassBatteries%d',i);
     thermalRes_i    = sprintf('TR_MA%d',i);

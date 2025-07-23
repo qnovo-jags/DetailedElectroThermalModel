@@ -7,6 +7,10 @@ for i = 1:1:32
         'Position',thermalReferencePosition+getBlockPosition(i)+[0, -550, 0, -550] , ...
         'ShowName', 'off');
     set_param(resBlock, 'Orientation', 'up');
+
+    set_param(resBlock, 'resistance', 'thermalResistanceTubeToModule')
+    set_param(resBlock, 'resistance_unit', 'K/W')
+
     % Create strings for the blocks you want to connect
     thermalMass_i   = sprintf('ThermalMass%s%d',  suffix,i);
     thermalMass_i_battery = sprintf('ThermalMassBatteries%d',i);
