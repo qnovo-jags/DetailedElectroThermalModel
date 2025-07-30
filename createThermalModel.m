@@ -35,10 +35,13 @@ for i = 1:32
         'ShowName', 'off');
     set_param(blockPath, 'BackgroundColor', 'blue');
     set_param(blockPath, 'Orientation', 'down');
-    set_param(blockPath, 'mass', 'massCoolant')
+    set_param(blockPath, 'mass', 'massCoolantScale * scaledMassCoolant')
     set_param(blockPath, 'mass_unit', 'kg')
     set_param(blockPath, 'sp_heat', 'CpCoolant')
     set_param(blockPath, 'sp_heat_unit', 'J/(K*kg)') 
+    set_param(blockPath, 'T_priority', 'high');
+    set_param(blockPath, "T_specify",'on')
+    set_param(blockPath, "T",'AmbientTemperature')
 end
 %%
 %Thermal Masses : Cooling Plate Hot Channels 
@@ -49,10 +52,13 @@ for i = 1:32
         'ShowName', 'off');
     set_param(blockPath, 'BackgroundColor', 'red');
     set_param(blockPath, 'Orientation', 'up');
-    set_param(blockPath, 'mass', 'massCoolant')
+    set_param(blockPath, 'mass', 'massCoolantScale * scaledMassCoolant')
     set_param(blockPath, 'mass_unit', 'kg')
     set_param(blockPath, 'sp_heat', 'CpCoolant')
     set_param(blockPath, 'sp_heat_unit', 'J/(K*kg)') 
+    set_param(blockPath, 'T_priority', 'high');
+    set_param(blockPath, "T_specify",'on')
+    set_param(blockPath, "T",'AmbientTemperature')
 end
 %%
 %Thermal masses : Modules
@@ -65,7 +71,10 @@ for i = 1:32
     set_param(blockPath, 'mass', 'massModule')
     set_param(blockPath, 'mass_unit', 'kg')
     set_param(blockPath, 'sp_heat', 'CpModule')
-    set_param(blockPath, 'sp_heat_unit', 'J/(K*kg)') 
+    set_param(blockPath, 'sp_heat_unit', 'J/(K*kg)')
+    set_param(blockPath, 'T_priority', 'high');
+    set_param(blockPath, "T_specify",'on')
+    set_param(blockPath, "T",'AmbientTemperature')
 end
 
 %% %Thermal connections between cooling channels 
@@ -73,7 +82,7 @@ end
 advectiveCoeff = [modelName, '/AdvectiveCoeff'];
 add_block('fl_lib/Physical Signals/Sources/PS Constant',advectiveCoeff, ...
     "Position", thermalReferencePosition+[0, 600, 30, 630])
-set_param(advectiveCoeff, 'constant', 'advectiveCoefficient')
+set_param(advectiveCoeff, 'constant', 'advectiveCoefficientScale * scaledAdvectiveCoefficient')
 set_param(advectiveCoeff, "constant_unit", 'W/K')
 
 % Add Custom Thermal Block (heat flow due to advection) between cooling channels

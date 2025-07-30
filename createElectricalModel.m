@@ -15,12 +15,14 @@ end
 
 IONIQ_parameters2_param
 load_system('./BatteryGeneration/IONIQ_parameters2_lib');
-
+load_system('./BatteryGeneration/IONIQ_parameters2')
 % Add your custom block from the library
 for i = 1:1:32
     filename = sprintf('%s/Module%d', modelName, i);
-    add_block('IONIQ_parameters2_lib/Modules/ModuleType1', filename, ...
-         'Position', getBlockPosition(i));
+    add_block('IONIQ_parameters2/ModuleAssembly1/Module1', filename, ...
+        'Position', getBlockPosition(i));
+    %add_block('IONIQ_parameters2_lib/Modules/ModuleType1', filename, ...
+    %     'Position', getBlockPosition(i));
 end
 
 for i = 2:1:32

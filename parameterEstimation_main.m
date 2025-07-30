@@ -1,5 +1,8 @@
-function [pOpt,Info] = parameterEstimation_main(p)
+function [pOpt, Info] = parameterEstimation_main(p, optimModel)
 
+% Set optimization method: "Simplex", "Nonlinear Least Squares", "GA",
+% "PSO", "Bayesian", "PatternSearch", "SimulatedAnnealing"
+% optimModel = "SimulatedAnnealing";
 open_system('mainModel')
 
 if nargin < 1
@@ -8,10 +11,16 @@ end
 
 Exp = sdo.Experiment('mainModel');
 
+% Load experimental data
 Exp_output = [];
-for i=1:1:18
+
+j_vals = [1, 4, 5, 8, 9, 12, 13, 16, 17, 20, 21, 24, 26, 28, 29, 32];
+
+for idx = 1:length(j_vals)
+    i = j_vals(idx);
     Exp_Sig_struct = Simulink.SimulationData.Signal;
-    Exp_Sig_struct.Values    = getData(sprintf('Exp_Sig_Output_Value_T%d',i));
+    %Exp_Sig_struct.Values    = getData(sprintf('Exp_Sig_Output_Value_T%d', i));
+    Exp_Sig_struct.Values    = getDataMeasurements(i);
     Exp_Sig_struct.BlockPath = sprintf('mainModel/TempProbeBlock%d', i);
     Exp_Sig_struct.PortType  = 'outport';
     Exp_Sig_struct.PortIndex = 1;
@@ -20,51 +29,167 @@ for i=1:1:18
 end
 
 Exp.OutputData = Exp_output;
-%%
-Param = sdo.getParameterFromModel('mainModel', {'massModule', 'massCoolant'});
-Param(1).Value = 0.5;
-Param(2).Value = 1;
+
+% Define parameters to estimate
+Param = sdo.getParameterFromModel('mainModel', ...
+{'massModule', 'scaledMassCoolant',...
+'scaledAdvectiveCoefficient', 'thermalResistanceModuleToAmbient_0', ...
+'thermalResistanceModuleToAmbient_1','thermalResistanceModuleToAmbient_2',...
+'thermalResistanceModuleToAmbient_3','thermalResistanceTubeToModule'});
+Param(1).Value = 11;
+Param(2).Value = 1.39;
+Param(3).Value = 1.36;
+Param(4).Value = 0.5;
+Param(5).Value = 1.1;
+Param(6).Value = 1.1;
+Param(7).Value = 0.8;
+Param(8).Value = 0.11;
+
+Param(1).Minimum = 0.1;
+Param(2).Minimum = 0.1;
+Param(3).Minimum = 0.1;
+Param(4).Minimum = 0.1;
+Param(5).Minimum = 0.1;
+Param(6).Minimum = 0.1;
+Param(7).Minimum = 0.1;
+Param(8).Minimum = 0.1;
+
+Param(1).Maximum = 20;
+Param(2).Maximum = 10;
+Param(3).Maximum = 10;
+Param(4).Maximum = 10;
+Param(5).Maximum = 10;
+Param(6).Maximum = 10;
+Param(7).Maximum = 10;
+Param(8).Maximum = 10;
+
 Exp.Parameters = Param;
 
-%%
 Simulator = createSimulator(Exp);
-
 s = getValuesToEstimate(Exp);
 p = [p; s];
-
 Simulator = setup(Simulator, 'FastRestart', 'off');
-
 SimulatorCleanup = onCleanup(@() restore(Simulator));
 
-%%
-optimfcn = @(P) main_optFcn(P,Simulator,Exp);
+lb = [Param.Minimum];
+ub = [Param.Maximum];
 
-Options = sdo.OptimizeOptions;
-Options.Method = 'fminsearch';
-Options.OptimizedModel = Simulator;
+%% Optimization
+switch optimModel
+    case "Simplex"
+        Options = sdo.OptimizeOptions;
+        Options.Method = 'fminsearch';
+        Options.OptimizedModel = Simulator;
+        Options.MethodOptions.TolX = 1e-2;
+        Options.MethodOptions.TolFun = 1e-2;
+        Options.MethodOptions.MaxIter = 200;
+        Options.MethodOptions.MaxFunEvals = 200;
+        optimfcn = @(P) main_optFcn(P, Simulator, Exp, optimModel);
+        [pOpt, Info] = sdo.optimize(optimfcn, p, Options);
 
-Options.MethodOptions.TolX = 1e-2;
-Options.MethodOptions.TolFun = 1e-2;
-Options.MethodOptions.MaxIter = 30;
-Options.MethodOptions.MaxFunEvals = 50;
+    case "Nonlinear Least Squares"
+        Options = sdo.OptimizeOptions;
+        Options.Method = 'lsqnonlin';
+        Options.MethodOptions.MaxIter = 50;
+        Options.MethodOptions.MaxFunEvals = 50;
+        optimfcn = @(P) main_optFcn(P, Simulator, Exp, optimModel);
+        [pOpt, Info] = sdo.optimize(optimfcn, p, Options);
 
-[pOpt,Info] = sdo.optimize(optimfcn,p,Options);
+    case "GA"
+        objFcn = @(x) wrapperCostFunction(x, Param, Simulator, Exp, optimModel);
+        options = optimoptions('ga', ...
+            'MaxGenerations', 5, ...
+            'PopulationSize', 10, ...
+            'Display', 'iter');
+        [pvec, ~] = ga(objFcn, numel(Param), [], [], [], [], lb, ub, [], options);
+        for i = 1:numel(Param)
+            Param(i).Value = pvec(i);
+        end
+        pOpt = Param;
+        Info = [];
 
-Exp = setEstimatedValues(Exp,pOpt);
-
-sdo.setValueInModel('mainModel',pOpt(1:0));
+    case "PSO"
+        objFcn = @(x) wrapperCostFunction(x, Param, Simulator, Exp, optimModel);
+        options = optimoptions('particleswarm', ...
+            'SwarmSize', 10, ...
+            'MaxIterations', 10, ...
+            'Display', 'iter');
+        [pvec, ~] = particleswarm(objFcn, numel(Param), lb, ub, options);
+        for i = 1:numel(Param)
+            Param(i).Value = pvec(i);
+        end
+        pOpt = Param;
+        Info = [];
+    case "Bayesian"
+        vars = [];
+        for i = 1:numel(Param)
+            name = Param(i).Name;
+            minVal = Param(i).Minimum;
+            maxVal = Param(i).Maximum;
+            vars = [vars, optimizableVariable(name, [minVal, maxVal])];
+        end
+    
+        objFcn = @(T) wrapperBayesOptFcn(T, Param, Simulator, Exp, optimModel);
+    
+        results = bayesopt(objFcn, vars, ...
+            'MaxObjectiveEvaluations', 50, ...
+            'Verbose', 1, ...
+            'PlotFcn', {@plotObjectiveModel, @plotMinObjective});
+        
+        best = results.XAtMinObjective;
+        for i = 1:numel(Param)
+            Param(i).Value = best.(Param(i).Name);
+        end
+        pOpt = Param;
+        Info = results;
+    case "PatternSearch"
+        lb = [Param.Minimum];
+        ub = [Param.Maximum];
+        objFcn = @(x) wrapperCostFunction(x, Param, Simulator, Exp, optimModel);
+  
+        options = optimoptions('patternsearch', ...
+            'MaxFunctionEvaluations', 50, ...
+            'Display', 'iter');
+    
+        [popt, ~] = patternsearch(objFcn, [Param.Value], [], [], [], [], lb, ub, [], options);
+    
+        for i = 1:numel(Param)
+            Param(i).Value = popt(i);
+        end
+        pOpt = Param;
+        Info = [];
+    case "SimulatedAnnealing"
+        objFcn = @(x) wrapperCostFunction(x, Param, Simulator, Exp, optimModel);
+        options = optimoptions('simulannealbnd', ...
+            'MaxFunctionEvaluations', 50, ...
+            'Display', 'iter');
+        [pvec, ~] = simulannealbnd(objFcn, [Param.Value], lb, ub, options);
+        for i = 1:numel(Param)
+            Param(i).Value = pvec(i);
+        end
+        pOpt = Param;
+        Info = [];
+    otherwise
+        error('Unknown optimization method: %s', optimModel);
 end
 
-function Vals = main_optFcn(P, Simulator, Exp)
-    persistent hFig hPlotMeasured hPlotExpected
+Exp = setEstimatedValues(Exp, pOpt);
+sdo.setValueInModel('mainModel', pOpt);
+end
+
+%% Cost Function for SDO and Wrapper
+function Vals = main_optFcn(P, Simulator, Exp, optimModel)
+    persistent hFig hPlotMeasured hPlotExpected evalLog
+    
+    if isempty(evalLog)
+        evalLog = [];
+    end
 
     r = sdo.requirements.SignalTracking('Method', 'Residuals');
     Exp = setEstimatedValues(Exp, P);
-
     F_r = [];
     Simulator = createSimulator(Exp, Simulator);
     Simulator = sim(Simulator);
-
     SimLog = find(Simulator.LoggedData, get_param('mainModel','SignalLoggingName'));
 
     for ctSig = 1:numel(Exp.OutputData)
@@ -72,26 +197,20 @@ function Vals = main_optFcn(P, Simulator, Exp)
         Error = evalRequirement(r, Sig.Values, Exp.OutputData(ctSig).Values);
         F_r = [F_r; Error(:)];
 
-        % Plot for the first signal only
         if ctSig == 1
             timeSim = Sig.Values.Time;
             dataSim = Sig.Values.Data;
             timeExp = Exp.OutputData(ctSig).Values.Time;
             dataExp = Exp.OutputData(ctSig).Values.Data;
-
-            % Create persistent figure and plot handles
             if isempty(hFig) || ~isvalid(hFig)
                 hFig = figure('Name', 'Signal Comparison', 'NumberTitle', 'off');
                 hPlotMeasured = plot(timeSim, dataSim, 'b', 'DisplayName', 'Measured (Simulated)');
                 hold on;
                 hPlotExpected = plot(timeExp, dataExp, 'r--', 'DisplayName', 'Expected');
-                xlabel('Time');
-                ylabel('Signal Value');
+                xlabel('Time'); ylabel('Signal Value');
                 title(['Signal Comparison: ', Exp.OutputData(ctSig).Name]);
-                legend('show');
-                grid on;
+                legend('show'); grid on;
             else
-                % Update plot data
                 set(hPlotMeasured, 'XData', timeSim, 'YData', dataSim);
                 set(hPlotExpected, 'XData', timeExp, 'YData', dataExp);
                 drawnow limitrate;
@@ -99,27 +218,44 @@ function Vals = main_optFcn(P, Simulator, Exp)
         end
     end
 
-    % Return scalar cost
-    Vals.F = sum(F_r.^2);
+    if optimModel == "Nonlinear Least Squares"
+        Vals.F = F_r;
+        costVal = sum(F_r.^2);
+    else
+        Vals.F = sum(F_r.^2);
+        costVal = Vals.F;
+    end
+    
+    evalLog(end+1) = costVal;
+    assignin('base', 'currentEvalLog', evalLog);  % expose to caller
 
-    % Print parameter values
     for i = 1:numel(P)
         fprintf('  %s = %.6f\n', P(i).Name, P(i).Value);
     end
     fprintf('--------------------------------------\n');
 end
 
+function cost = wrapperCostFunction(xVec, ParamTemplate, Simulator, Exp, optimModel)
+    for i = 1:numel(ParamTemplate)
+        ParamTemplate(i).Value = xVec(i);
+    end
+    Vals = main_optFcn(ParamTemplate, Simulator, Exp, optimModel);
+    cost = Vals.F;
+end
 
-
+function cost = wrapperBayesOptFcn(T, ParamTemplate, Simulator, Exp, optimModel)
+    xVec = zeros(1, numel(ParamTemplate));
+    for i = 1:numel(ParamTemplate)
+        xVec(i) = T.(ParamTemplate(i).Name);
+    end
+    cost = wrapperCostFunction(xVec, ParamTemplate, Simulator, Exp, optimModel);
+end
 
 function Data = getData(DataID)
     token = regexp(DataID, 'Exp_Sig_Output_Value_T(\d+)', 'tokens');
-    
     if ~isempty(token)
-        num = token{1}{1};  % Extract the number as string
+        num = token{1}{1};
         filename = sprintf('./results/Data%s.csv', num);
-    
-        % Check if the file exists
         if isfile(filename)
             data = readtable(filename);
             t = data.Var1;
@@ -133,3 +269,27 @@ function Data = getData(DataID)
     end
 end
 
+function Data = getDataMeasurements(i)
+    % Define file path and name
+    filepath = 'C:\Users\mbhattu\Desktop\EV Battery Pack Data Processing Pipeline\plots_output_uniform_run_clusters_spline\remapped_csvs\';
+    filename = sprintf('%sData%d.csv', filepath, i);
+
+    % Check if file exists
+    if ~isfile(filename)
+        error('File not found: %s', filename);
+    end
+
+    % Read CSV file
+    data = readtable(filename);
+
+    % Use column names if available, otherwise assume Var1 and Var2
+    if width(data) < 2
+        error('Expected at least 2 columns in %s', filename);
+    end
+
+    t = data{:,1};  % Time values
+    y = data{:,2};  % Sensor values
+
+    % Create timeseries object
+    Data = timeseries(y, t);
+end
