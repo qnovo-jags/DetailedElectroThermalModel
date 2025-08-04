@@ -13,7 +13,7 @@ if isStandalone
     open_system(modelName);
 end
 
-IONIQ_parameters2_param
+%IONIQ_parameters2_param
 load_system('./BatteryGeneration/IONIQ_parameters2_lib');
 load_system('./BatteryGeneration/IONIQ_parameters2')
 % Add your custom block from the library
@@ -41,26 +41,30 @@ end
 
 solverBlock = [modelName, '/SolverConfig'];
 add_block('nesl_utility/Solver Configuration', solverBlock,...
-    "Position", [150, 100, 200, 120]);
+    "Position", [200, 160, 230, 180]);
 
 cyclerBlock = [modelName, '/Cycler'];
-add_block('batt_lib/Cyclers/Cycler', cyclerBlock);
+add_block('batt_lib/Cyclers/Cycler', cyclerBlock, "Position", [250, 50, 300, 100]);
 
 % constantCurrent = [modelName, '/ConstantCurrent'];
 % add_block('fl_lib/Physical Signals/Sources/PS Constant', constantCurrent)
 % set_param(constantCurrent, 'constant', 'currentDraw')
 
 currentProfile = [modelName, '/currentProfile'];
-add_block('simulink/Sources/From Workspace', currentProfile);
+add_block('simulink/Sources/From Workspace', currentProfile, ...
+    "Position", [100, 50, 150, 80]);
 set_param(currentProfile, "VariableName", 'currentData') 
+set_param(currentProfile, 'ShowName', 'off');
 currentProfiletoSimscape = [modelName, '/currentProfiletoSimscape'];
-add_block('nesl_utility/Simulink-PS Converter', currentProfiletoSimscape);
-add_line(modelName, 'currentProfile/1', 'currentProfiletoSimscape/1');
+add_block('nesl_utility/Simulink-PS Converter', currentProfiletoSimscape,...
+    "Position", [180, 50, 200, 80]);
+set_param(currentProfiletoSimscape, 'ShowName', 'off');
+add_line(modelName, 'currentProfile/1', 'currentProfiletoSimscape/1', 'autorouting', 'on');
 
 
 constant1 = [modelName, '/Constant1'];
 add_block('fl_lib/Physical Signals/Sources/PS Constant',constant1, ...
-    "Position", [50, 100, 70, 120])
+    "Position", [150, 80, 170, 100])
 
 add_line(modelName, 'Constant1/RConn 1', 'Cycler/LConn 3')
 %add_line(modelName, 'ConstantCurrent/RConn 1', 'Cycler/LConn 1')
@@ -73,5 +77,5 @@ add_block('fl_lib/Electrical/Electrical Elements/Electrical Reference', ...
     [modelName '/ElectricalRef'], ...
     'Position', [680, 800, 700,820]);
 
-add_line(modelName, 'ElectricalRef/LConn 1', 'Module32/RConn 1')
-add_line(modelName, 'SolverConfig/RConn 1', 'Cycler/RConn 2')
+add_line(modelName, 'ElectricalRef/LConn 1', 'Module32/RConn 1', 'autorouting', 'on')
+add_line(modelName, 'SolverConfig/RConn 1', 'Cycler/RConn 2', 'autorouting', 'smart')

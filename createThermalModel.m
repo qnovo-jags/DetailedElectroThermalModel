@@ -68,7 +68,7 @@ for i = 1:32
         sprintf('%s/ThermalMassBatteries%d', modelName, i), 'Position',thermalReferencePosition+getBlockPosition(i)+[10, -600, 10, -600]);
     set_param(blockPath, 'BackgroundColor', 'yellow');
     set_param(blockPath, 'Orientation', 'up');
-    set_param(blockPath, 'mass', 'massModule')
+    set_param(blockPath, 'mass', 'massModuleScale * scaledMassModule')
     set_param(blockPath, 'mass_unit', 'kg')
     set_param(blockPath, 'sp_heat', 'CpModule')
     set_param(blockPath, 'sp_heat_unit', 'J/(K*kg)')

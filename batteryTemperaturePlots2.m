@@ -39,7 +39,7 @@ for t = 1:N
 
     title(sprintf('Time = %.2f s', time_series(t)), 'FontSize', 14);
     drawnow;
-    pause(0.5);  % adjust speed as needed
+    pause(0.05);  % adjust speed as needed
 end
 
 

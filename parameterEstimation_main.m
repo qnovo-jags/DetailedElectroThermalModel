@@ -1,4 +1,4 @@
-function [pOpt, Info] = parameterEstimation_main(p, optimModel)
+function [pOpt, Info] = parameterEstimation_main(p, optimModel, dateData)
 
 % Set optimization method: "Simplex", "Nonlinear Least Squares", "GA",
 % "PSO", "Bayesian", "PatternSearch", "SimulatedAnnealing"
@@ -20,7 +20,7 @@ for idx = 1:length(j_vals)
     i = j_vals(idx);
     Exp_Sig_struct = Simulink.SimulationData.Signal;
     %Exp_Sig_struct.Values    = getData(sprintf('Exp_Sig_Output_Value_T%d', i));
-    Exp_Sig_struct.Values    = getDataMeasurements(i);
+    Exp_Sig_struct.Values    = getDataMeasurements(i, dateData);
     Exp_Sig_struct.BlockPath = sprintf('mainModel/TempProbeBlock%d', i);
     Exp_Sig_struct.PortType  = 'outport';
     Exp_Sig_struct.PortIndex = 1;
@@ -32,36 +32,41 @@ Exp.OutputData = Exp_output;
 
 % Define parameters to estimate
 Param = sdo.getParameterFromModel('mainModel', ...
-{'massModule', 'scaledMassCoolant',...
-'scaledAdvectiveCoefficient', 'thermalResistanceModuleToAmbient_0', ...
-'thermalResistanceModuleToAmbient_1','thermalResistanceModuleToAmbient_2',...
-'thermalResistanceModuleToAmbient_3','thermalResistanceTubeToModule'});
-Param(1).Value = 11;
-Param(2).Value = 1.39;
-Param(3).Value = 1.36;
-Param(4).Value = 0.5;
-Param(5).Value = 1.1;
-Param(6).Value = 1.1;
-Param(7).Value = 0.8;
-Param(8).Value = 0.11;
+{'scaledMassModule', ...
+'scaledMassCoolant',...
+'scaledAdvectiveCoefficient',...
+'thermalResistanceModuleToAmbient_0', ...
+'thermalResistanceModuleToAmbient_1',...
+'thermalResistanceModuleToAmbient_2',...
+'thermalResistanceModuleToAmbient_3',...
+'thermalResistanceTubeToModule'});
 
-Param(1).Minimum = 0.1;
-Param(2).Minimum = 0.1;
-Param(3).Minimum = 0.1;
-Param(4).Minimum = 0.1;
-Param(5).Minimum = 0.1;
-Param(6).Minimum = 0.1;
-Param(7).Minimum = 0.1;
-Param(8).Minimum = 0.1;
+Param(1).Value = 1.2;
+Param(2).Value = 0.8;
+Param(3).Value = 1.2;
+Param(4).Value = 3;
+Param(5).Value = 0.5;
+Param(6).Value = 1;
+Param(7).Value = 1.5;
+Param(8).Value = 0.5;
 
-Param(1).Maximum = 20;
-Param(2).Maximum = 10;
-Param(3).Maximum = 10;
-Param(4).Maximum = 10;
-Param(5).Maximum = 10;
-Param(6).Maximum = 10;
-Param(7).Maximum = 10;
-Param(8).Maximum = 10;
+Param(1).Minimum = 0.5;
+Param(2).Minimum = 0.5;
+Param(3).Minimum = 0.5;
+Param(4).Minimum = 0.5;
+Param(5).Minimum = 0.5;
+Param(6).Minimum = 0.5;
+Param(7).Minimum = 0.5;
+Param(8).Minimum = 0.5;
+
+Param(1).Maximum = 5;
+Param(2).Maximum = 5;
+Param(3).Maximum = 5;
+Param(4).Maximum = 5;
+Param(5).Maximum = 5;
+Param(6).Maximum = 5;
+Param(7).Maximum = 5;
+Param(8).Maximum = 5;
 
 Exp.Parameters = Param;
 
@@ -94,6 +99,28 @@ switch optimModel
         Options.MethodOptions.MaxFunEvals = 50;
         optimfcn = @(P) main_optFcn(P, Simulator, Exp, optimModel);
         [pOpt, Info] = sdo.optimize(optimfcn, p, Options);
+    
+    case "MultiStart"
+        objFcn = @(x) wrapperCostFunction(x, Param, Simulator, Exp, optimModel);
+        problem = createOptimProblem('fmincon', ...
+            'objective', objFcn, ...
+            'x0', rand(1, numel(Param)), ...
+            'lb', lb, ...
+            'ub', ub, ...
+            'options', optimoptions('fmincon', 'Display', 'none', 'Algorithm', 'interior-point'));
+        ms = MultiStart('UseParallel', true, 'Display', 'off');
+        [pvec, ~] = run(ms, problem, 20);  % 20 random starts
+
+    case "GlobalSearch"
+        objFcn = @(x) wrapperCostFunction(x, Param, Simulator, Exp, optimModel);
+        problem = createOptimProblem('fmincon', ...
+            'objective', objFcn, ...
+            'x0', rand(1, numel(Param)), ...
+            'lb', lb, ...
+            'ub', ub, ...
+            'options', optimoptions('fmincon', 'Display', 'none'));
+        gs = GlobalSearch('Display', 'off');
+        [pvec, ~] = run(gs, problem);
 
     case "GA"
         objFcn = @(x) wrapperCostFunction(x, Param, Simulator, Exp, optimModel);
@@ -232,6 +259,7 @@ function Vals = main_optFcn(P, Simulator, Exp, optimModel)
     for i = 1:numel(P)
         fprintf('  %s = %.6f\n', P(i).Name, P(i).Value);
     end
+    fprintf('Error = %.2f\n', costVal)
     fprintf('--------------------------------------\n');
 end
 
@@ -269,9 +297,10 @@ function Data = getData(DataID)
     end
 end
 
-function Data = getDataMeasurements(i)
+function Data = getDataMeasurements(i, dateData)
     % Define file path and name
-    filepath = 'C:\Users\mbhattu\Desktop\EV Battery Pack Data Processing Pipeline\plots_output_uniform_run_clusters_spline\remapped_csvs\';
+    out = getInputsByCase(dateData);   
+    filepath = out{3};
     filename = sprintf('%sData%d.csv', filepath, i);
 
     % Check if file exists

@@ -7,7 +7,7 @@ batteryCell.Geometry = PouchGeometry();
 
 batteryCell.CellModelOptions.CellModelBlockPath="batt_lib/Cells/Battery Equivalent Circuit";
 batteryCell.CellModelOptions.BlockParameters.RCPairs="rc1";
-
+%batteryCell.CellModelOptions.BlockParameters.ThermalModel = "LumpedThermalMass";
 
 pSet = ParallelAssembly(Cell=batteryCell,NumParallelCells=2,Topology="SingleStack",Rows=1);
 module = Module(ParallelAssembly=pSet,NumSeriesAssemblies=6);

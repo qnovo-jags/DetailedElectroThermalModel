@@ -2,6 +2,8 @@ clc
 %clear all 
 close all
 
+%dateData = "20250731";
+
 %Constants
 KtoC = 273; 
 CpModule = 1000;
@@ -10,39 +12,43 @@ rhoCoolant = 1000;
 ACoolant = 2e-5;
 
 IONIQ_parameters2_param
-%%
+
 %Tunable parameters
-massCoolantScale = 0.003;
-scaledMassCoolant = 1;
+scaledMassCoolant = 0.8; %Tuneable parameter
+massCoolantScale = 0.003;  
 
+scaledAdvectiveCoefficient = 1.2; %Tuneable parameter
 advectiveCoefficientScale = 100;
-scaledAdvectiveCoefficient = 1;
 
-thermalResistanceTubeToModule = 0.237;
+scaledMassModule = 1.2; %Tuneable parameter
+massModuleScale = 11;
 
-thermalResistanceModuleToAmbient_0 = 5;
+thermalResistanceModuleToAmbient_0 = 3;
 thermalResistanceModuleToAmbient_1 = 0.5;
-thermalResistanceModuleToAmbient_2 = 5;
-thermalResistanceModuleToAmbient_3 = 5;
+thermalResistanceModuleToAmbient_2 = 1;
+thermalResistanceModuleToAmbient_3 = 1.5;
 
-massModule = 11;
-massCoolant = 0.003;
+thermalResistanceTubeToModule = 0.5;
 
-coolantTempSourceTemperature = 300;
-AmbientTemperature = 300;
+out = getInputsByCase(dateData);
+AmbientTemperature = out{4};
+coolantTempSourceTemperature = AmbientTemperature;
 
-%%
 thermalMassModule = CpModule * massModule;
 thermalMassCoolantChannel = CpCoolant * massCoolant;  
 
-currentData = readmatrix("interpolated_current.csv");
-%currentData = [(1:2000)', [-200 * ones(1000,1); zeros(1000,1)]];
+tic
+
+out = getInputsByCase(dateData);
+currentData = out{2};
+
 modelName = 'mainModel';
 open_system(modelName);
 simOut = sim(modelName);
 
 simlog = simscape.logging.getSimulationLog(modelName);
 
+toc
 %%
 % Initialize the figure
 figure;
@@ -70,4 +76,5 @@ for i = 1:numModules
     T_all(i, :) = T_series(:);             % store temperature series
 end
 
-batteryTemperatureRelative(T_all, time_series)
+%batteryTemperaturePlots2(T_all, time_series)
+
