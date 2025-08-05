@@ -34,8 +34,8 @@ out = getInputsByCase(dateData);
 AmbientTemperature = out{4};
 coolantTempSourceTemperature = AmbientTemperature;
 
-thermalMassModule = CpModule * massModule;
-thermalMassCoolantChannel = CpCoolant * massCoolant;  
+%thermalMassModule = CpModule * massModule;
+%thermalMassCoolantChannel = CpCoolant * massCoolant;  
 
 tic
 
