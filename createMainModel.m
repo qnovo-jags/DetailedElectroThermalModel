@@ -11,7 +11,6 @@ end
 new_system(modelName);
 open_system(modelName);
 load_system(modelName)
-%parameterSet
 
 load_system('coolantFlow_lib')
 
