@@ -35,7 +35,7 @@ for i = 1:length(h_connection_list)
         add_line(modelName, [thermalMass_ip1 '/LConn 1'], [coolant_i '/LConn3'], 'autorouting', 'on');
         add_line(modelName, [coolant_i '/LConn2'], [thermalMass_i '/LConn 1'], 'autorouting', 'on');
     end        
-    add_line(modelName,'AdvectiveCoeff/RConn 1',[coolant_i '/LConn1'], 'autorouting', 'on');
+    add_line(modelName,'coolantSwitchMultiplier/RConn1',[coolant_i '/LConn1'], 'autorouting', 'on');
 end
 for i = 1:length(v_connection_list)
     top = v_connection_list(i, 1);
@@ -64,5 +64,5 @@ for i = 1:length(v_connection_list)
         add_line(modelName, [coolant_i '/LConn2'], [thermalMass_i '/LConn 1'], 'autorouting', 'on');
     end        
     
-    add_line(modelName,'AdvectiveCoeff/RConn 1',[coolant_i '/LConn1'], 'autorouting', 'on');
+    add_line(modelName,'coolantSwitchMultiplier/RConn1',[coolant_i '/LConn1'], 'autorouting', 'on');
 end

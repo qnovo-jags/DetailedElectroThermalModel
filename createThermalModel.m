@@ -81,9 +81,24 @@ end
 %Add an advective coefficient
 advectiveCoeff = [modelName, '/AdvectiveCoeff'];
 add_block('fl_lib/Physical Signals/Sources/PS Constant',advectiveCoeff, ...
-    "Position", thermalReferencePosition+[0, 600, 30, 630])
+    "Position", [ 290,  -305,   320,  -275])
 set_param(advectiveCoeff, 'constant', 'advectiveCoefficientScale * scaledAdvectiveCoefficient')
 set_param(advectiveCoeff, "constant_unit", 'W/K')
+
+load_system("coolantFlowSwitch_lib.slx")
+add_block('coolantFlowSwitch_lib/MATLAB Function', ...
+    sprintf("%s/%s", modelName, "coolantSwitch"), ...
+    "Position", [65,  -213,   135,  -167]);
+add_block('nesl_utility/Simulink-PS Converter', ...
+    sprintf("%s/%s", modelName, "coolantSwitchConverter"),...
+    "Position", [ 255,  -198,   270,  -182]);
+add_block('fl_lib/Physical Signals/Functions/PS Product', ...
+    sprintf("%s/%s", modelName, "coolantSwitchMultiplier"), ...
+    "Position", [480,  -298,   500,  -267]);
+add_line(modelName, 'currentProfile/1', 'coolantSwitch/1', 'autorouting', 'on');
+add_line(modelName, 'coolantSwitch/1', 'coolantSwitchConverter/1', 'autorouting', 'on');
+add_line(modelName, 'coolantSwitchConverter/RConn 1',"coolantSwitchMultiplier/LConn 2" , 'autorouting', 'on');
+add_line(modelName, 'AdvectiveCoeff/RConn 1',"coolantSwitchMultiplier/LConn 1" , 'autorouting', 'on');
 
 % Add Custom Thermal Block (heat flow due to advection) between cooling channels
 createThermalConnectionsTube(modelName, connectionLists, "CPCC", thermalReferencePosition);
@@ -96,7 +111,7 @@ add_block('coolantFlow_lib/CoolantFlow2to3', coolantBlock,...
 
 add_line(modelName, 'CoolanthotCoolConnect63/LConn2', 'ThermalMassCPCC17/LConn 1');
 add_line(modelName, 'CoolanthotCoolConnect63/LConn3', 'ThermalMassCPHC17/LConn 1');
-add_line(modelName,'AdvectiveCoeff/RConn 1','CoolanthotCoolConnect63/LConn1', 'autorouting', 'on');
+add_line(modelName,'coolantSwitchMultiplier/RConn1','CoolanthotCoolConnect63/LConn1', 'autorouting', 'on');
 
 %%
 %Thermal Resistances between cooling channels and the batteries
@@ -111,7 +126,7 @@ createThermalConnectionsModuleAmbient(modelName, thermalReferencePosition)
 coolantTempSource = sprintf('%s/Coolant%s', modelName, "TempSource");
 add_block('fl_lib/Thermal/Thermal Sources/Temperature Source', ...
     coolantTempSource, 'Position', thermalReferencePosition+getBlockPosition(29)+[100, 0, 100, 0]);
-set_param(coolantTempSource, 'Temperature','coolantTempSourceTemperature')
+set_param(coolantTempSource, 'Temperature','coolantTempSourceTemperatureScale * scaledCoolantTemp')
 
 coolantBC1 = sprintf('%s/Coolant%s%d', modelName, "BC", 1);
 add_block('coolantFlow_lib/CoolantFlow2to3', coolantBC1,...
@@ -129,8 +144,8 @@ add_line(modelName, 'CoolantBC1/LConn3', 'ThermalMassCPCC29/LConn 1','autoroutin
 add_line(modelName, 'CoolantBC2/LConn2', 'ThermalMassCPHC29/LConn 1','autorouting','on')
 add_line(modelName, 'CoolantBC2/LConn3', 'CoolantTempSource/LConn 1','autorouting','on')
 
-add_line(modelName,'AdvectiveCoeff/RConn 1','CoolantBC1/LConn1', 'autorouting', 'on');
-add_line(modelName,'AdvectiveCoeff/RConn 1','CoolantBC2/LConn1', 'autorouting', 'on');
+add_line(modelName,'coolantSwitchMultiplier/RConn1','CoolantBC1/LConn1', 'autorouting', 'on');
+add_line(modelName,'coolantSwitchMultiplier/RConn1','CoolantBC2/LConn1', 'autorouting', 'on');
 %%
 %Create a controlled heat flow rate source to be fed from joule heating
 %calculations
@@ -138,6 +153,7 @@ createThermalConnectionsModuleHeatgen(modelName, thermalReferencePosition)
 
 %%
 %Add solver configuration
+
 thermalSolverBlock = [modelName, '/ThermalSolverConfig'];
 add_block('nesl_utility/Solver Configuration', thermalSolverBlock, ...
     'Position', thermalReferencePosition+ [-50, 0, -20, 30]);

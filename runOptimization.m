@@ -1,8 +1,11 @@
-createMainModel
+warning('off', 'all')
 
-dateData = "20250731";
+run("./createMainModel.m")
 
-runScript
+dateData = "20241211";
+
+run("./runScript")
 
 %parameterEstimation_main([], "Nonlinear Least Squares", dateData)
-parameterEstimation_main([], "Simplex", dateData)
+parameterEstimation_main([], 'mainModelNew', "Simplex", dateData)
+

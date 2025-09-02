@@ -14,12 +14,12 @@ if isStandalone
 end
 
 %IONIQ_parameters2_param
-load_system('./BatteryGeneration/IONIQ_parameters2_lib');
-load_system('./BatteryGeneration/IONIQ_parameters2')
+load_system('./BatteryGeneration/thermalCoupled_lib');
+load_system('./BatteryGeneration/thermalCoupled')
 % Add your custom block from the library
 for i = 1:1:32
     filename = sprintf('%s/Module%d', modelName, i);
-    add_block('IONIQ_parameters2/ModuleAssembly1/Module1', filename, ...
+    add_block('thermalCoupled/ModuleAssembly1/Module1', filename, ...
         'Position', getBlockPosition(i));
     %add_block('IONIQ_parameters2_lib/Modules/ModuleType1', filename, ...
     %     'Position', getBlockPosition(i));
@@ -27,7 +27,7 @@ end
 
 for i = 2:1:32
     srcPort = sprintf('Module%d/RConn1', i-1); % Output of previous block
-    dstPort = sprintf('Module%d/LConn1', i);   % Input of current block
+    dstPort = sprintf('Module%d/LConn2', i);   % Input of current block
     add_line(modelName, srcPort, dstPort, 'autorouting', 'on');
 end
 
@@ -44,7 +44,7 @@ add_block('nesl_utility/Solver Configuration', solverBlock,...
     "Position", [200, 160, 230, 180]);
 
 cyclerBlock = [modelName, '/Cycler'];
-add_block('batt_lib/Cyclers/Cycler', cyclerBlock, "Position", [250, 50, 300, 100]);
+add_block('batt_lib/Cyclers/Cycler', cyclerBlock, "Position", [245,  -120,   295,   -70]);
 
 % constantCurrent = [modelName, '/ConstantCurrent'];
 % add_block('fl_lib/Physical Signals/Sources/PS Constant', constantCurrent)
@@ -52,25 +52,26 @@ add_block('batt_lib/Cyclers/Cycler', cyclerBlock, "Position", [250, 50, 300, 100
 
 currentProfile = [modelName, '/currentProfile'];
 add_block('simulink/Sources/From Workspace', currentProfile, ...
-    "Position", [100, 50, 150, 80]);
+    "Position", [95,  -120,   145,   -90]);
 set_param(currentProfile, "VariableName", 'currentData') 
+set_param(currentProfile, "SampleTime", '10') 
 set_param(currentProfile, 'ShowName', 'off');
 currentProfiletoSimscape = [modelName, '/currentProfiletoSimscape'];
 add_block('nesl_utility/Simulink-PS Converter', currentProfiletoSimscape,...
-    "Position", [180, 50, 200, 80]);
+    "Position", [ 175,  -120,   195,   -90]);
 set_param(currentProfiletoSimscape, 'ShowName', 'off');
 add_line(modelName, 'currentProfile/1', 'currentProfiletoSimscape/1', 'autorouting', 'on');
 
 
 constant1 = [modelName, '/Constant1'];
 add_block('fl_lib/Physical Signals/Sources/PS Constant',constant1, ...
-    "Position", [150, 80, 170, 100])
+    "Position", [145,   -90,   165,   -70])
 
 add_line(modelName, 'Constant1/RConn 1', 'Cycler/LConn 3')
 %add_line(modelName, 'ConstantCurrent/RConn 1', 'Cycler/LConn 1')
 add_line(modelName, 'currentProfiletoSimscape/RConn 1',  'Cycler/LConn 1')
 
-add_line(modelName, 'Cycler/RConn 1', 'Module1/LConn 1', 'autorouting', 'on')
+add_line(modelName, 'Cycler/RConn 1', 'Module1/LConn 2', 'autorouting', 'on')
 add_line(modelName, 'Cycler/RConn 2', 'Module32/RConn 1', 'autorouting', 'on')
 
 add_block('fl_lib/Electrical/Electrical Elements/Electrical Reference', ...
@@ -79,3 +80,9 @@ add_block('fl_lib/Electrical/Electrical Elements/Electrical Reference', ...
 
 add_line(modelName, 'ElectricalRef/LConn 1', 'Module32/RConn 1', 'autorouting', 'on')
 add_line(modelName, 'SolverConfig/RConn 1', 'Cycler/RConn 2', 'autorouting', 'smart')
+
+probePath = [modelName, '/PackProbe'];
+targetBlock = [modelName, '/Cycler'];
+add_block('nesl_utility/Probe',probePath, "Position", [ 395,  -163,   455,  -112]);
+simscape.probe.setBoundBlock(probePath, targetBlock);
+simscape.probe.setVariables(probePath, ["i","v"]);

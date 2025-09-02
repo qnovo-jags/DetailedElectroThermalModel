@@ -1,27 +1,28 @@
-function [pOpt, Info] = parameterEstimation_main(p, optimModel, dateData)
+function [pOpt, Info] = parameterEstimation_main(p, modelName, optimModel, dateData)
 
 % Set optimization method: "Simplex", "Nonlinear Least Squares", "GA",
 % "PSO", "Bayesian", "PatternSearch", "SimulatedAnnealing"
 % optimModel = "SimulatedAnnealing";
-open_system('mainModel')
+%% 
+open_system(modelName)
 
 if nargin < 1
     p = [];
 end
 
-Exp = sdo.Experiment('mainModel');
+Exp = sdo.Experiment(modelName);
 
 % Load experimental data
 Exp_output = [];
 
-j_vals = [1, 4, 5, 8, 9, 12, 13, 16, 17, 20, 21, 24, 26, 28, 29, 32];
+j_vals = [1, 4, 5, 8, 9, 12, 13, 16, 17, 20, 21, 24, 25, 28, 29, 32];
 
 for idx = 1:length(j_vals)
     i = j_vals(idx);
     Exp_Sig_struct = Simulink.SimulationData.Signal;
     %Exp_Sig_struct.Values    = getData(sprintf('Exp_Sig_Output_Value_T%d', i));
     Exp_Sig_struct.Values    = getDataMeasurements(i, dateData);
-    Exp_Sig_struct.BlockPath = sprintf('mainModel/TempProbeBlock%d', i);
+    Exp_Sig_struct.BlockPath = sprintf('%s/TempProbeBlock%d', modelName, i);
     Exp_Sig_struct.PortType  = 'outport';
     Exp_Sig_struct.PortIndex = 1;
     Exp_Sig_struct.Name      = sprintf('T%d', i);
@@ -31,7 +32,7 @@ end
 Exp.OutputData = Exp_output;
 
 % Define parameters to estimate
-Param = sdo.getParameterFromModel('mainModel', ...
+Param = sdo.getParameterFromModel(modelName, ...
 {'scaledMassModule', ...
 'scaledMassCoolant',...
 'scaledAdvectiveCoefficient',...
@@ -43,7 +44,7 @@ Param = sdo.getParameterFromModel('mainModel', ...
 
 Param(1).Value = 1.2;
 Param(2).Value = 0.8;
-Param(3).Value = 1.2;
+Param(3).Value = 1;
 Param(4).Value = 3;
 Param(5).Value = 0.5;
 Param(6).Value = 1;
@@ -89,7 +90,7 @@ switch optimModel
         Options.MethodOptions.TolFun = 1e-2;
         Options.MethodOptions.MaxIter = 200;
         Options.MethodOptions.MaxFunEvals = 200;
-        optimfcn = @(P) main_optFcn(P, Simulator, Exp, optimModel);
+        optimfcn = @(P) main_optFcn(P, Simulator, Exp, optimModel, modelName);
         [pOpt, Info] = sdo.optimize(optimfcn, p, Options);
 
     case "Nonlinear Least Squares"
@@ -97,11 +98,11 @@ switch optimModel
         Options.Method = 'lsqnonlin';
         Options.MethodOptions.MaxIter = 50;
         Options.MethodOptions.MaxFunEvals = 50;
-        optimfcn = @(P) main_optFcn(P, Simulator, Exp, optimModel);
+        optimfcn = @(P) main_optFcn(P, Simulator, Exp, optimModel, modelName);
         [pOpt, Info] = sdo.optimize(optimfcn, p, Options);
     
     case "MultiStart"
-        objFcn = @(x) wrapperCostFunction(x, Param, Simulator, Exp, optimModel);
+        objFcn = @(x) wrapperCostFunction(x, Param, Simulator, Exp, optimModel, modelName);
         problem = createOptimProblem('fmincon', ...
             'objective', objFcn, ...
             'x0', rand(1, numel(Param)), ...
@@ -112,7 +113,7 @@ switch optimModel
         [pvec, ~] = run(ms, problem, 20);  % 20 random starts
 
     case "GlobalSearch"
-        objFcn = @(x) wrapperCostFunction(x, Param, Simulator, Exp, optimModel);
+        objFcn = @(x) wrapperCostFunction(x, Param, Simulator, Exp, optimModel, modelName);
         problem = createOptimProblem('fmincon', ...
             'objective', objFcn, ...
             'x0', rand(1, numel(Param)), ...
@@ -123,7 +124,7 @@ switch optimModel
         [pvec, ~] = run(gs, problem);
 
     case "GA"
-        objFcn = @(x) wrapperCostFunction(x, Param, Simulator, Exp, optimModel);
+        objFcn = @(x) wrapperCostFunction(x, Param, Simulator, Exp, optimModel, modelName);
         options = optimoptions('ga', ...
             'MaxGenerations', 5, ...
             'PopulationSize', 10, ...
@@ -136,7 +137,7 @@ switch optimModel
         Info = [];
 
     case "PSO"
-        objFcn = @(x) wrapperCostFunction(x, Param, Simulator, Exp, optimModel);
+        objFcn = @(x) wrapperCostFunction(x, Param, Simulator, Exp, optimModel, modelName);
         options = optimoptions('particleswarm', ...
             'SwarmSize', 10, ...
             'MaxIterations', 10, ...
@@ -156,7 +157,7 @@ switch optimModel
             vars = [vars, optimizableVariable(name, [minVal, maxVal])];
         end
     
-        objFcn = @(T) wrapperBayesOptFcn(T, Param, Simulator, Exp, optimModel);
+        objFcn = @(T) wrapperBayesOptFcn(T, Param, Simulator, Exp, optimModel, modelName);
     
         results = bayesopt(objFcn, vars, ...
             'MaxObjectiveEvaluations', 50, ...
@@ -172,7 +173,7 @@ switch optimModel
     case "PatternSearch"
         lb = [Param.Minimum];
         ub = [Param.Maximum];
-        objFcn = @(x) wrapperCostFunction(x, Param, Simulator, Exp, optimModel);
+        objFcn = @(x) wrapperCostFunction(x, Param, Simulator, Exp, optimModel, modelName);
   
         options = optimoptions('patternsearch', ...
             'MaxFunctionEvaluations', 50, ...
@@ -186,7 +187,7 @@ switch optimModel
         pOpt = Param;
         Info = [];
     case "SimulatedAnnealing"
-        objFcn = @(x) wrapperCostFunction(x, Param, Simulator, Exp, optimModel);
+        objFcn = @(x) wrapperCostFunction(x, Param, Simulator, Exp, optimModel, modelName);
         options = optimoptions('simulannealbnd', ...
             'MaxFunctionEvaluations', 50, ...
             'Display', 'iter');
@@ -201,11 +202,11 @@ switch optimModel
 end
 
 Exp = setEstimatedValues(Exp, pOpt);
-sdo.setValueInModel('mainModel', pOpt);
+sdo.setValueInModel(modelName, pOpt);
 end
 
 %% Cost Function for SDO and Wrapper
-function Vals = main_optFcn(P, Simulator, Exp, optimModel)
+function Vals = main_optFcn(P, Simulator, Exp, optimModel, modelName)
     persistent hFig hPlotMeasured hPlotExpected evalLog
     
     if isempty(evalLog)
@@ -217,7 +218,7 @@ function Vals = main_optFcn(P, Simulator, Exp, optimModel)
     F_r = [];
     Simulator = createSimulator(Exp, Simulator);
     Simulator = sim(Simulator);
-    SimLog = find(Simulator.LoggedData, get_param('mainModel','SignalLoggingName'));
+    SimLog = find(Simulator.LoggedData, get_param(modelName,'SignalLoggingName'));
 
     for ctSig = 1:numel(Exp.OutputData)
         Sig = find(SimLog, Exp.OutputData(ctSig).Name);
@@ -263,20 +264,20 @@ function Vals = main_optFcn(P, Simulator, Exp, optimModel)
     fprintf('--------------------------------------\n');
 end
 
-function cost = wrapperCostFunction(xVec, ParamTemplate, Simulator, Exp, optimModel)
+function cost = wrapperCostFunction(xVec, ParamTemplate, Simulator, Exp, optimModel, modelName)
     for i = 1:numel(ParamTemplate)
         ParamTemplate(i).Value = xVec(i);
     end
-    Vals = main_optFcn(ParamTemplate, Simulator, Exp, optimModel);
+    Vals = main_optFcn(ParamTemplate, Simulator, Exp, optimModel, modelName);
     cost = Vals.F;
 end
 
-function cost = wrapperBayesOptFcn(T, ParamTemplate, Simulator, Exp, optimModel)
+function cost = wrapperBayesOptFcn(T, ParamTemplate, Simulator, Exp, optimModel, modelName)
     xVec = zeros(1, numel(ParamTemplate));
     for i = 1:numel(ParamTemplate)
         xVec(i) = T.(ParamTemplate(i).Name);
     end
-    cost = wrapperCostFunction(xVec, ParamTemplate, Simulator, Exp, optimModel);
+    cost = wrapperCostFunction(xVec, ParamTemplate, Simulator, Exp, optimModel, modelName);
 end
 
 function Data = getData(DataID)

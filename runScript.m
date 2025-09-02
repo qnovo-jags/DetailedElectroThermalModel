@@ -1,48 +1,62 @@
 clc
-%clear all 
+
 close all
-
-%dateData = "20250731";
-
-%Constants
-KtoC = 273; 
-CpModule = 1000;
-CpCoolant = 3400;
-rhoCoolant = 1000;
-ACoolant = 2e-5;
-
-IONIQ_parameters2_param
-
-%Tunable parameters
-scaledMassCoolant = 0.8; %Tuneable parameter
-massCoolantScale = 0.003;  
-
-scaledAdvectiveCoefficient = 1.2; %Tuneable parameter
-advectiveCoefficientScale = 100;
-
-scaledMassModule = 1.2; %Tuneable parameter
-massModuleScale = 11;
-
-thermalResistanceModuleToAmbient_0 = 3;
-thermalResistanceModuleToAmbient_1 = 0.5;
-thermalResistanceModuleToAmbient_2 = 1;
-thermalResistanceModuleToAmbient_3 = 1.5;
-
-thermalResistanceTubeToModule = 0.5;
-
-out = getInputsByCase(dateData);
-AmbientTemperature = out{4};
-coolantTempSourceTemperature = AmbientTemperature;
-
-%thermalMassModule = CpModule * massModule;
-%thermalMassCoolantChannel = CpCoolant * massCoolant;  
-
 tic
 
-out = getInputsByCase(dateData);
-currentData = out{2};
+run("./constant_parameters.m")
 
-modelName = 'mainModel';
+run('./BatteryGeneration/thermalCoupled_param.m')
+
+out = getInputsByCase(dateData);
+Module1.socCell = out{1};
+currentData = out{2};
+AmbientTemperature = out{4};
+Module1.batteryTemperature = out{4};
+%coolantTempSourceTemperature = out{4};
+
+%Tunable parameters
+% scaledMassModule = 0.9;
+% scaledMassCoolant = 0.65; 
+% scaledAdvectiveCoefficient = 1; 
+% thermalResistanceModuleToAmbient_0 = 2.91;
+% thermalResistanceModuleToAmbient_1 = 0.28;
+% thermalResistanceModuleToAmbient_2 = 1.17;
+% thermalResistanceModuleToAmbient_3 = 1.59;
+% thermalResistanceTubeToModule = 0.55;
+% scaledCoolantTemp = 1;
+
+% scaledMassModule = 1.2075;
+% scaledMassCoolant = 0.72181; 
+% scaledAdvectiveCoefficient = 0.82224; 
+% thermalResistanceModuleToAmbient_0 = 2.1073;
+% thermalResistanceModuleToAmbient_1 = 0.46324;
+% thermalResistanceModuleToAmbient_2 = 0.9483;
+% thermalResistanceModuleToAmbient_3 = 1.4345;
+% thermalResistanceTubeToModule = 0.51219;
+% scaledCoolantTemp = 0.97198;
+
+scaledMassModule = 0.8;
+scaledMassCoolant = 4.8509; 
+scaledAdvectiveCoefficient = 4.5932; 
+thermalResistanceModuleToAmbient_0 = 1.0269;
+thermalResistanceModuleToAmbient_1 = 0.51832;
+thermalResistanceModuleToAmbient_2 = 1.1982;
+thermalResistanceModuleToAmbient_3 = 2.4342;
+thermalResistanceTubeToModule = 0.5;
+scaledCoolantTemp = 0.9803;
+
+% scaledMassModule = 0.76866;
+% scaledMassCoolant = 4.407; 
+% scaledAdvectiveCoefficient = 4.1231; 
+% thermalResistanceModuleToAmbient_0 = 1.8947;
+% thermalResistanceModuleToAmbient_1 = 0.52539;
+% thermalResistanceModuleToAmbient_2 = 0.79929;
+% thermalResistanceModuleToAmbient_3 = 3.83;
+% thermalResistanceTubeToModule = 0.52909;
+% scaledCoolantTemp = 0.98304;
+tic
+
+modelName = 'mainModelNew';
 open_system(modelName);
 simOut = sim(modelName);
 
@@ -50,11 +64,6 @@ simlog = simscape.logging.getSimulationLog(modelName);
 
 toc
 %%
-% Initialize the figure
-figure;
-hold on;
-grid on;
-
 % Loop through all 32 battery blocks
 numModules = 32;
 
@@ -65,16 +74,24 @@ for i = 1:numModules
 
     % Save CSV
     data_matrix = [time_series(:), T_series(:)];
-    writematrix(data_matrix, sprintf('./Results/Data%d.csv', i));
 
-    % Store in a matrix
-    if i == 1
-        N = length(time_series);           % number of time steps
-        T_all = zeros(numModules, N);      % preallocate
+    folderPath = sprintf('./Results/%s', dateData);
+    filename = sprintf('%s/Data%d.csv', folderPath, i);
+    
+    % Create the folder if it doesn't exist
+    if ~exist(folderPath, 'dir')
+        mkdir(folderPath);
     end
-
-    T_all(i, :) = T_series(:);             % store temperature series
+    
+    % Write the matrix to the file
+    writematrix(data_matrix, filename);
 end
 
 %batteryTemperaturePlots2(T_all, time_series)
+
+%plotAllModuleTemperatures()
+
+%%
+plotPackIVwithMeasured(simOut, out{5}, "./simResults/")
+
 
