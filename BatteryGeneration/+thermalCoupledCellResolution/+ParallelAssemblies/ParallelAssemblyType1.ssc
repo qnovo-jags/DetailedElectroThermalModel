@@ -1,0 +1,185 @@
+component ParallelAssemblyType1
+    % ParallelAssemblyType1:2
+    % Parallel Assembly Block
+    %    Model resolution: Detailed
+    %    Number of cells: 2
+    %
+    %    MATLAB version: 25.1
+    %    Simscape Battery version: 25.1
+    %    Simscape code generated on: 08-Sep-2025 00:01:38
+
+    parameters
+        BatteryCapacityCell = {27,'A*hr'}; % Battery capacity
+        BatteryCapacityCellPercentDeviation = zeros([2 1]); % Percent deviation for BatteryCapacityCell
+        ExtrapolationMethodCell = {simscape.enum.extrapolation.nearest,'1'}; % Extrapolation method for all tables
+        SOCBreakpointsCell = {[0, .1, .25, .5, .75, .9, 1],'1'}; % State of charge breakpoints, SOC
+        SOCBreakpointsCellPercentDeviation = zeros([2 1]); % Percent deviation for SOCBreakpointsCell
+        TemperatureBreakpointsCell = {[278, 293, 313],'K'}; % Temperature breakpoints, T
+        TemperatureBreakpointsCellPercentDeviation = zeros([2 1]); % Percent deviation for TemperatureBreakpointsCell
+        OpenCircuitVoltageThermalCell = {[3.49, 3.5, 3.51; 3.55, 3.57, 3.56; 3.62, 3.63, 3.64; 3.71, 3.71, 3.72; 3.91, 3.93, 3.94; 4.07, 4.08, 4.08; 4.19, 4.19, 4.19],'V'}; % Open-circuit voltage, OCV(SOC,T)
+        OpenCircuitVoltageThermalCellPercentDeviation = zeros([2 1]); % Percent deviation for OpenCircuitVoltageThermalCell
+        VoltageRangeCell = {[0, inf],'V'}; % Terminal voltage operating range, [Min Max]
+        VoltageRangeCellPercentDeviation = zeros([2 1]); % Percent deviation for VoltageRangeCell
+        ResistanceSOCBreakpointsCell = {[0, .1, .25, .5, .75, .9, 1],'1'}; % State of charge breakpoints for resistance, SOC
+        ResistanceSOCBreakpointsCellPercentDeviation = zeros([2 1]); % Percent deviation for ResistanceSOCBreakpointsCell
+        ResistanceTemperatureBreakpointsCell = {[278, 293, 313],'K'}; % Temperature breakpoints for resistance, T
+        ResistanceTemperatureBreakpointsCellPercentDeviation = zeros([2 1]); % Percent deviation for ResistanceTemperatureBreakpointsCell
+        R0ThermalCell = {[.0117, .0085, .009; .011, .0085, .009; .0114, .0087, .0092; .0107, .0082, .0088; .0107, .0083, .0091; .0113, .0085, .0089; .0116, .0085, .0089],'Ohm'}; % Instantaneous resistance, R0(SOC,T)
+        R0ThermalCellPercentDeviation = zeros([2 1]); % Percent deviation for R0ThermalCell
+        R1ThermalCell = {[.0109, .0029, .0013; .0069, .0024, .0012; .0047, .0026, .0013; .0034, .0016, .001; .0033, .0023, .0014; .0033, .0018, .0011; .0028, .0017, .0011],'Ohm'}; % First polarization resistance, R1(SOC,T)
+        R1ThermalCellPercentDeviation = zeros([2 1]); % Percent deviation for R1ThermalCell
+        Tau1ThermalCell = {[20, 36, 39; 31, 45, 39; 109, 105, 61; 36, 29, 26; 59, 77, 67; 40, 33, 29; 25, 39, 33],'s'}; % First time constant, Tau1(SOC,T)
+        Tau1ThermalCellPercentDeviation = zeros([2 1]); % Percent deviation for Tau1ThermalCell
+        BatteryThermalMassCell = {100,'J/K'}; % Battery thermal mass
+        BatteryThermalMassCellPercentDeviation = zeros([2 1]); % Percent deviation for BatteryThermalMassCell
+        AmbientResistance = {25,'K/W'}; % Cell level ambient thermal path resistance
+    end
+
+    parameters(ExternalAccess=none)
+        P = 2; % Batteries in Parallel
+        NumCellThermalNodeElements = size(Cell1(1).H,1); % NumCellThermalNodeElements
+    end
+
+    parameters(Access=private)
+        AmbientResistanceScaled = AmbientResistance .* ones(NumCellThermalNodeElements,P) * NumCellThermalNodeElements / size(AmbientResistance,1); % Scaled cell level ambient thermal path resistance
+    end
+
+    nodes
+        p = foundation.electrical.electrical; % +
+        n = foundation.electrical.electrical; % -
+        AmbH = foundation.thermal.thermal; % AmbH
+    end
+
+    variables
+        socCell = {value={repmat(1,2,1),'1'},priority=priority.high}; % Cell state of charge
+        batteryVoltage = {repmat(0,2,1),'V'}; % Terminal voltage
+        batteryCurrent = {repmat(0,2,1),'A'}; % Current (positive in)
+        numCycles = {value={repmat(0,2,1),'1'},priority=priority.high}; % Discharge cycles
+        batteryTemperature = {value={repmat(298.15,2,1),'K'},priority=priority.high}; % Temperature
+        vParallelAssembly = {value={0,'V'},priority=priority.none}; % Parallel Assembly Voltage
+        socParallelAssembly = {value={1,'1'},priority=priority.none}; % Parallel Assembly state of charge
+    end
+
+    equations
+        assert(length(socCell) == P);
+        assert(length(batteryVoltage) == P);
+        assert(length(batteryCurrent) == P);
+        assert(length(numCycles) == P);
+        assert(length(batteryTemperature) == P);
+        assert(length(vParallelAssembly) == 1);
+        assert(length(socParallelAssembly) == 1);
+        assert(isequal(size(AmbientResistance),[1,1]) || isequal(size(AmbientResistance),[NumCellThermalNodeElements,P]),...
+            'Cell level ambient thermal path resistance must be scalar or an M-by-N array, where M is the number of elements of the cell thermal node and N is number of cells modeled by the block.');
+        vParallelAssembly == Cell1(1).p.v - Cell1(1).n.v;
+        socParallelAssembly == sum([Cell1.stateOfCharge])/P;
+        assert(isValidPercentDeviationSize(BatteryCapacityCellPercentDeviation,BatteryCapacityCell,P),...
+            'Percent deviation for BatteryCapacityCell must contain a number of vertically concatenated elements equal to the number of cell models. Each element must be a scalar or equal to the size of the underlying parameter.');
+        assert(isValidPercentDeviationSize(SOCBreakpointsCellPercentDeviation,SOCBreakpointsCell,P),...
+            'Percent deviation for SOCBreakpointsCell must contain a number of vertically concatenated elements equal to the number of cell models. Each element must be a scalar or equal to the size of the underlying parameter.');
+        assert(isValidPercentDeviationSize(TemperatureBreakpointsCellPercentDeviation,TemperatureBreakpointsCell,P),...
+            'Percent deviation for TemperatureBreakpointsCell must contain a number of vertically concatenated elements equal to the number of cell models. Each element must be a scalar or equal to the size of the underlying parameter.');
+        assert(isValidPercentDeviationSize(OpenCircuitVoltageThermalCellPercentDeviation,OpenCircuitVoltageThermalCell,P),...
+            'Percent deviation for OpenCircuitVoltageThermalCell must contain a number of vertically concatenated elements equal to the number of cell models. Each element must be a scalar or equal to the size of the underlying parameter.');
+        assert(isValidPercentDeviationSize(VoltageRangeCellPercentDeviation,VoltageRangeCell,P),...
+            'Percent deviation for VoltageRangeCell must contain a number of vertically concatenated elements equal to the number of cell models. Each element must be a scalar or equal to the size of the underlying parameter.');
+        assert(isValidPercentDeviationSize(ResistanceSOCBreakpointsCellPercentDeviation,ResistanceSOCBreakpointsCell,P),...
+            'Percent deviation for ResistanceSOCBreakpointsCell must contain a number of vertically concatenated elements equal to the number of cell models. Each element must be a scalar or equal to the size of the underlying parameter.');
+        assert(isValidPercentDeviationSize(ResistanceTemperatureBreakpointsCellPercentDeviation,ResistanceTemperatureBreakpointsCell,P),...
+            'Percent deviation for ResistanceTemperatureBreakpointsCell must contain a number of vertically concatenated elements equal to the number of cell models. Each element must be a scalar or equal to the size of the underlying parameter.');
+        assert(isValidPercentDeviationSize(R0ThermalCellPercentDeviation,R0ThermalCell,P),...
+            'Percent deviation for R0ThermalCell must contain a number of vertically concatenated elements equal to the number of cell models. Each element must be a scalar or equal to the size of the underlying parameter.');
+        assert(isValidPercentDeviationSize(R1ThermalCellPercentDeviation,R1ThermalCell,P),...
+            'Percent deviation for R1ThermalCell must contain a number of vertically concatenated elements equal to the number of cell models. Each element must be a scalar or equal to the size of the underlying parameter.');
+        assert(isValidPercentDeviationSize(Tau1ThermalCellPercentDeviation,Tau1ThermalCell,P),...
+            'Percent deviation for Tau1ThermalCell must contain a number of vertically concatenated elements equal to the number of cell models. Each element must be a scalar or equal to the size of the underlying parameter.');
+        assert(isValidPercentDeviationSize(BatteryThermalMassCellPercentDeviation,BatteryThermalMassCell,P),...
+            'Percent deviation for BatteryThermalMassCell must contain a number of vertically concatenated elements equal to the number of cell models. Each element must be a scalar or equal to the size of the underlying parameter.');
+    end
+
+    annotations
+        [p] : Side=top;
+        [n] : Side=bottom;
+        UILayout = [UIGroup("Main",BatteryCapacityCell,BatteryCapacityCellPercentDeviation,ExtrapolationMethodCell),...
+            UIGroup("Open Circuit Voltage",SOCBreakpointsCell,SOCBreakpointsCellPercentDeviation,TemperatureBreakpointsCell,TemperatureBreakpointsCellPercentDeviation,OpenCircuitVoltageThermalCell,OpenCircuitVoltageThermalCellPercentDeviation,VoltageRangeCell,VoltageRangeCellPercentDeviation),...
+            UIGroup("Overpotential",ResistanceSOCBreakpointsCell,ResistanceSOCBreakpointsCellPercentDeviation,ResistanceTemperatureBreakpointsCell,ResistanceTemperatureBreakpointsCellPercentDeviation,R0ThermalCell,R0ThermalCellPercentDeviation,R1ThermalCell,R1ThermalCellPercentDeviation,Tau1ThermalCell,Tau1ThermalCellPercentDeviation),...
+            UIGroup("Thermal",BatteryThermalMassCell,BatteryThermalMassCellPercentDeviation,AmbientResistance)];
+        Icon = 'parallelAssembly.svg';
+    end
+
+    for Pidx = 1:P
+        components(ExternalAccess=observe,CompileReuse=true)
+            Cell1(Pidx) = batt.cells.batteryEquivalentCircuit(BatteryCapacity = applyParameterDeviation(BatteryCapacityCell,BatteryCapacityCellPercentDeviation,P,Pidx),ExtrapolationMethod = ExtrapolationMethodCell,...
+                SOCBreakpoints = applyParameterDeviation(SOCBreakpointsCell,SOCBreakpointsCellPercentDeviation,P,Pidx),...
+                TemperatureBreakpoints = applyParameterDeviation(TemperatureBreakpointsCell,TemperatureBreakpointsCellPercentDeviation,P,Pidx),...
+                OpenCircuitVoltageThermal = applyParameterDeviation(OpenCircuitVoltageThermalCell,OpenCircuitVoltageThermalCellPercentDeviation,P,Pidx),...
+                VoltageRange = applyParameterDeviation(VoltageRangeCell,VoltageRangeCellPercentDeviation,P,Pidx),...
+                ResistanceSOCBreakpoints = applyParameterDeviation(ResistanceSOCBreakpointsCell,ResistanceSOCBreakpointsCellPercentDeviation,P,Pidx),...
+                ResistanceTemperatureBreakpoints = applyParameterDeviation(ResistanceTemperatureBreakpointsCell,ResistanceTemperatureBreakpointsCellPercentDeviation,P,Pidx),...
+                R0Thermal = applyParameterDeviation(R0ThermalCell,R0ThermalCellPercentDeviation,P,Pidx),...
+                R1Thermal = applyParameterDeviation(R1ThermalCell,R1ThermalCellPercentDeviation,P,Pidx),...
+                Tau1Thermal = applyParameterDeviation(Tau1ThermalCell,Tau1ThermalCellPercentDeviation,P,Pidx),...
+                BatteryThermalMass = applyParameterDeviation(BatteryThermalMassCell,BatteryThermalMassCellPercentDeviation,P,Pidx),...
+                CurrentDependence = simscape.battery.enum.cells.CurrentDependence.Disabled,...
+                SelfDischargeResistor = simscape.battery.enum.cells.BatteryEnable.Disabled,RCPairs = simscape.battery.enum.cells.RCPairs.rc1,...
+                CyclingAgingMethod = simscape.battery.enum.cells.CyclingAgingMethod.disabled,...
+                CalendarAgeResistance = simscape.battery.enum.cells.BatteryEnable.Disabled,...
+                CalendarAgeCapacity = simscape.battery.enum.cells.BatteryEnable.Disabled,...
+                ThermalModel = simscape.battery.enum.cells.BatteryThermalModel.LumpedThermalMass,...
+                HysteresisModel = simscape.battery.enum.cells.HysteresisModel.none,...
+                ReversibleHeatModel = simscape.battery.enum.cells.ReversibleHeatModel.Disabled,...
+                CalendarAgingMethod = simscape.battery.enum.cells.CalendarAgingMethod.equation,...
+                StorageVariable = simscape.battery.enum.cells.StorageVariable.OCV,stateOfCharge.priority = priority.none,...
+                batteryVoltage.priority = priority.none,batteryCurrent.priority = priority.none,...
+                numCycles.priority = priority.none,batteryTemperature.priority = priority.none);
+        end
+    end
+
+    for Pidx = 1:P
+        connections
+            connect(p,Cell1(Pidx).p);
+            connect(Cell1(Pidx).n,n);
+        end
+    end
+
+    for Pidx = 1:P
+        equations
+            Cell1(Pidx).stateOfCharge == socCell(Pidx);
+            Cell1(Pidx).batteryVoltage == batteryVoltage(Pidx);
+            Cell1(Pidx).batteryCurrent == batteryCurrent(Pidx);
+            Cell1(Pidx).numCycles == numCycles(Pidx);
+            Cell1(Pidx).batteryTemperature == batteryTemperature(Pidx);
+        end
+    end
+
+    for thermalNodeElementIdx = 1:NumCellThermalNodeElements
+        for Pidx = 1:P
+            components(ExternalAccess=observe)
+                AmbientResistor(thermalNodeElementIdx,Pidx) = foundation.thermal.elements.resistance(...
+                    resistance = AmbientResistanceScaled(thermalNodeElementIdx,Pidx));
+            end
+
+            connections
+                connect(Cell1(Pidx).H(thermalNodeElementIdx),AmbientResistor(thermalNodeElementIdx,Pidx).A);
+                connect(AmbientResistor(thermalNodeElementIdx,Pidx).B,AmbH);
+            end
+        end
+    end
+end
+
+function cellParameter = applyParameterDeviation(parameter,parameterDeviation,p,pIndex)
+    definitions
+        parameterDeviationSize=size(parameterDeviation);
+        indexedParameterDeviation=parameterDeviation(parameterDeviationSize(1) * (pIndex - 1) / p + 1 : parameterDeviationSize(1) * pIndex / p,:);
+        cellParameter=(1 + reshape(indexedParameterDeviation,[parameterDeviationSize(1) / p,parameterDeviationSize(2:end)]) ./ 100) .* parameter;
+    end
+end
+
+function isValidSize = isValidPercentDeviationSize(percentDeviation,parameter,totalNumModels)
+    definitions
+        percentDeviationSize=size(percentDeviation);
+        parameterSize=size(parameter);
+        isScalarPercentDeviation=isequal(percentDeviationSize,[totalNumModels,1]);
+        isTrueToSizePercentDeviation=isequal(percentDeviationSize,[parameterSize(1) * totalNumModels,parameterSize(2:end)]);
+        isValidSize=isScalarPercentDeviation||isTrueToSizePercentDeviation;
+    end
+end

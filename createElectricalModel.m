@@ -13,16 +13,13 @@ if isStandalone
     open_system(modelName);
 end
 
-%IONIQ_parameters2_param
-load_system('./BatteryGeneration/thermalCoupled_lib');
-load_system('./BatteryGeneration/thermalCoupled')
+load_system('./BatteryGeneration/thermalCoupledCellResolution.slx');
+
 % Add your custom block from the library
 for i = 1:1:32
     filename = sprintf('%s/Module%d', modelName, i);
-    add_block('thermalCoupled/ModuleAssembly1/Module1', filename, ...
+    add_block(sprintf('thermalCoupledCellResolution/ModuleAssembly1/Module%02d', i), filename, ...
         'Position', getBlockPosition(i));
-    %add_block('IONIQ_parameters2_lib/Modules/ModuleType1', filename, ...
-    %     'Position', getBlockPosition(i));
 end
 
 for i = 2:1:32
@@ -31,12 +28,21 @@ for i = 2:1:32
     add_line(modelName, srcPort, dstPort, 'autorouting', 'on');
 end
 
+load_system("heatGenerationForCellResolvedModel.slx")
+
 for i=1:1:32
     probePath = [modelName, sprintf('/MyProbeBlock%d',i)];
     targetBlock = [modelName, sprintf('/Module%d',i)];
     add_block('nesl_utility/Probe',probePath, "Position",getBlockPosition(i)+[-1000, 0,-1000, 0]);
     simscape.probe.setBoundBlock(probePath, targetBlock);
-    simscape.probe.setVariables(probePath, ["Cell1.batteryCurrent","Cell1.batteryVoltage","Cell1.ocv"]);
+    %simscape.probe.setVariables(probePath, ["Cell1.batteryCurrent","Cell1.batteryVoltage","Cell1.ocv"]);
+    simscape.probe.setVariables(probePath, ["batteryCurrent","batteryTemperature","batteryVoltage","socCell"]);
+    add_block('heatGenerationForCellResolvedModel/heatGenCellResolved', [modelName, sprintf('/heatGenModule%d',i)], ...
+                 "Position",getBlockPosition(i)+[-940, 0,-970, 0]   );
+    add_line(modelName, sprintf('MyProbeBlock%d/1',i), sprintf('heatGenModule%d/1',i));
+    add_line(modelName, sprintf('MyProbeBlock%d/2',i), sprintf('heatGenModule%d/2',i))
+    add_line(modelName, sprintf('MyProbeBlock%d/3',i), sprintf('heatGenModule%d/3',i))
+    add_line(modelName, sprintf('MyProbeBlock%d/4',i), sprintf('heatGenModule%d/4',i))
 end
 
 solverBlock = [modelName, '/SolverConfig'];

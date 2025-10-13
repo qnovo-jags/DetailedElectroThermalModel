@@ -3,8 +3,8 @@
 clc
 %clear all;
 close all;
-
-modelName = 'mainModelNew';
+run("BatteryGeneration/ev_pack_cell_parameters.m")
+modelName = 'mainModelDOE';
 
 if bdIsLoaded(modelName)
     close_system(modelName, 0);
@@ -15,15 +15,17 @@ load_system(modelName)
 
 createElectricalModel
 
-load_system('./coolantFlow_lib')
+load_system('./coolantFlow_lib.slx')
 createThermalModel
-
-load_system('./algebraicManip_lib')
 
 electricalToThermal(modelName)
 thermalToElectrical(modelName)
 
 set_param(modelName, 'SimscapeLogType', 'all')  
+
+% set_param(modelName, 'FastRestart', 'on');
+
+set_param(modelName, 'FastRestart', 'off');
 set_param(modelName, 'StartTime', '0', 'StopTime', '10000');
-%set_param(modelName, 'FastRestart', 'on');
-save_system(modelName, "mainModelNew.slx")
+
+save_system(modelName, sprintf("%s.slx",modelName))

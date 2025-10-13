@@ -62,8 +62,11 @@ cell_param.OpenCircuitVoltageThermalCell = [
     4.126,	4.116,	4.114;
     4.177,	4.132,	4.114];
 
+% Open-circuit voltage, OCV(SOC,T) = OCV(SOC,T=298.15K), V
+cell_param.OpenCircuitVoltageThermalCell = repmat(cell_param.OpenCircuitVoltageThermalCell(:,2), 1, 3);
+
 % Terminal voltage operating range, [Min Max], V
-cell_param.VoltageRangeCell = [0, inf];
+cell_param.VoltageRangeCell = [0, Inf];
 
 % State of charge breakpoints for resistance, SOC
 cell_param.ResistanceSOCBreakpointsCell = [
