@@ -15,7 +15,7 @@ chargeCrates = [2];                   % [C-rate]
 restAfterChargeSec = [30*60];         % [s]
 dischargeCrates = 2;                  % [C]
 restAfterDischargeSec = 30*60;        % [s]
-numberOfCycles = 5;                   % [-]
+numberOfCycles = 2;                   % [-]
 ambientTempsKelvin = 273.15 + [25];   % [K]
 
 % === Generate DOE ===
