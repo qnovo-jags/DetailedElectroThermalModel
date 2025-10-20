@@ -1,8 +1,10 @@
-function [Modules, capacity_devs, r0_devs, r1_devs, tau1_devs, soc0s] = compilePackModel(SYPACK, target_ambient_temp)
+function [Modules, capacity_devs, r0_devs, r1_devs, tau1_devs, soc0s] = compilePackModel(SYPACKS, target_ambient_temp, PACK_ID)
 %COMPILEPACKMODEL Generate module structs and DOE deviations for Simulink
 %
 % Inputs:
-%   SYPACK : Struct containing all pack parameters, including damaged cell info and percent deviations
+%   SYPACKS : Struct containing all pack parameters, including damaged cell info and percent deviations
+%   target_ambient_temp: Constant ambient temperature for the pack
+%   PACK_ID: Select an specific pack ID from the SYPACK struct
 %
 % Outputs:
 %   Modules      : 1 x numModules struct array with all module parameters
@@ -28,6 +30,7 @@ fields = { "scaledMassModule",...
     "scaledCoolantTemp",...
      "AmbientTemperature"};
 
+SYPACK = SYPACKS(PACK_ID);
 for i = 1:numel(fields)
     assignin("base", fields{i}, SYPACK.(fields{i}));
 end
@@ -132,7 +135,8 @@ for i = 1:numModules
 end
     
 % Save health deviations
-savePackHealthCSV('./sypack192s2p60ah/SYPACK1/metadata/pack_health.csv', ...
+file_path = sprintf('./sypack192s2p60ah/SYPACK%d/metadata/pack_health.csv',PACK_ID);
+savePackHealthCSV(file_path, ...
                   capacity_devs, r0_devs, r1_devs, tau1_devs, soc0s, SYPACK);
 
 

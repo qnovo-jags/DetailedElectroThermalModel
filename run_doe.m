@@ -5,14 +5,15 @@ close all
 
 %% --- Load constants and setup ---
 
-PACK_ID = 1;
+% PACK_ID = 1; % Includes defective cells
+PACK_ID = 2; % All  healthy cells
 CellNominalCapacityAh = 60;
 numParallelCells = 2;
 numModules = 32;
 modelName = 'mainModelDOEJF';
 
 % Set the directories
-project_dir = "./sypack192s2p60ah/SYPACK1";
+project_dir = sprintf("./sypack192s2p60ah/SYPACK%d",PACK_ID);
 sim_dir = fullfile(project_dir, "simulations");
 mat_dir = fullfile(sim_dir, "mat_format");  
 metadata_dir = fullfile(project_dir, "metadata");  
@@ -42,6 +43,7 @@ fprintf("Loaded DOE configuration for SYPACK%d successfully.\n", PACK_ID);
 is_qnovo_format = 1;  % 1: "[I1,I2,...]" format, 0 for expanded format
 all_run_sequences = unique([DOE.run_sequence]);
 totalTimer = tic;  % start total timer
+simMode = 'accelerator';  % Can also be 'accelerator' or 'normal' or 'rapid'
 
 for seqIdx = 1:length(all_run_sequences)
     
@@ -51,12 +53,13 @@ for seqIdx = 1:length(all_run_sequences)
 
     % % --- Initialize model for this run sequence
     initTimer = tic;
-    doe_initialization(modelName, DOE, target_sequence, CellNominalCapacityAh, numParallelCells, SYPACK(PACK_ID));
+    doe_initialization(modelName, DOE, target_sequence, CellNominalCapacityAh, ...
+        numParallelCells, SYPACK, PACK_ID);
     fprintf("Initialization completed in %.2f seconds\n", toc(initTimer));
     
     % --- Run fast restart loop to simulate all DOEs in this sequence
     loopTimer = tic;
-    doe_fast_restart_loop(modelName, DOE, target_sequence, ...
+    doe_run_loop(modelName, DOE, target_sequence, ...
                                         CellNominalCapacityAh, numParallelCells, ...
                                         sim_dir, is_qnovo_format);
     fprintf("Completed run_sequence %d in %.2f seconds\n", target_sequence, toc(loopTimer));

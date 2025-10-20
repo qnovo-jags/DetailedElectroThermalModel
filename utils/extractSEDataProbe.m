@@ -106,8 +106,11 @@ cellfun(@(d) ~exist(d,'dir') && mkdir(d), {orig_dir, res_dir, mat_dir});
 % Save the logs
 writetable(se_data.original, fullfile(orig_dir, sprintf('%s.csv', target_id)));
 fprintf('Original data saved: %s\n', fullfile(orig_dir, sprintf('%s.csv', target_id)));
+
 writetable(se_data.resampled, fullfile(res_dir, sprintf('%s.csv', target_id)));
 fprintf('Resampled data saved: %s\n', fullfile(res_dir, sprintf('%s.csv', target_id)));
-save(fullfile(mat_dir, sprintf('%s.mat', target_id)), 'se_data', '-v7.3');
-fprintf('MAT file saved: %s\n', fullfile(mat_dir, sprintf('%s.mat', target_id)));
+
+% save(fullfile(mat_dir, sprintf('%s.mat', target_id)), 'se_data', '-v7.3');
+% fprintf('MAT file saved: %s\n', fullfile(mat_dir, sprintf('%s.mat', target_id)));
+
 end

@@ -2,7 +2,7 @@
 
 %% --- Setup paths ---
 
-PACK_ID = 1;
+PACK_ID = 2;
 common_path = sprintf('sypack192s2p60ah/SYPACK%d/metadata', PACK_ID);
 if ~exist(common_path, 'dir')
     mkdir(common_path);
@@ -56,7 +56,7 @@ fprintf('Saved pack parameters JSON: %s\n', packParamFile);
 % =========================================
 profiles = struct();
 
-profiles.Healthy_BoL.BatteryCapacity.mean = 0;
+profiles.Healthy_BoL.BatteryCapacity.mean = 0; % Percentage change
 profiles.Healthy_BoL.BatteryCapacity.std  = 0.1;
 profiles.Healthy_BoL.R0.mean  = 0;
 profiles.Healthy_BoL.R0.std   = 1;
@@ -64,18 +64,18 @@ profiles.Healthy_BoL.R1.mean  = 0;
 profiles.Healthy_BoL.R1.std   = 1;
 profiles.Healthy_BoL.Tau1.mean = 0;
 profiles.Healthy_BoL.Tau1.std  = 1;
-profiles.Healthy_BoL.SoC.mean  = 0;
+profiles.Healthy_BoL.SoC.mean  = 0; % It is absolute change
 profiles.Healthy_BoL.SoC.std   = 0.005;
 
 profiles.Damaged_BoL.BatteryCapacity.mean = 0;
 profiles.Damaged_BoL.BatteryCapacity.std  = 0.1;
-profiles.Damaged_BoL.R0.mean  = 10;
+profiles.Damaged_BoL.R0.mean  = 20;
 profiles.Damaged_BoL.R0.std   = 5;
-profiles.Damaged_BoL.R1.mean  = 10;
+profiles.Damaged_BoL.R1.mean  = 20;
 profiles.Damaged_BoL.R1.std   = 5;
-profiles.Damaged_BoL.Tau1.mean = 10;
+profiles.Damaged_BoL.Tau1.mean = 20;
 profiles.Damaged_BoL.Tau1.std  = 5;
-profiles.Damaged_BoL.SoC.mean  = 0.02;
+profiles.Damaged_BoL.SoC.mean  = 0.03;
 profiles.Damaged_BoL.SoC.std   = 0.01;
 
 profiles.Healthy_Aged.BatteryCapacity.mean = -10;
@@ -91,11 +91,11 @@ profiles.Healthy_Aged.SoC.std   = 0.005;
 
 profiles.Damaged_Aged.BatteryCapacity.mean = -15;
 profiles.Damaged_Aged.BatteryCapacity.std  = 5;
-profiles.Damaged_Aged.R0.mean  = 15;
+profiles.Damaged_Aged.R0.mean  = 25;
 profiles.Damaged_Aged.R0.std   = 5;
-profiles.Damaged_Aged.R1.mean  = 15;
+profiles.Damaged_Aged.R1.mean  = 25;
 profiles.Damaged_Aged.R1.std   = 5;
-profiles.Damaged_Aged.Tau1.mean = 15;
+profiles.Damaged_Aged.Tau1.mean = 25;
 profiles.Damaged_Aged.Tau1.std  = 5;
 profiles.Damaged_Aged.SoC.mean  = 0.03;
 profiles.Damaged_Aged.SoC.std   = 0.01;
@@ -107,16 +107,47 @@ SYPACK(PACK_ID).damage_profiles = profiles;
 % Assign modules and cells per condition
 % =========================================
 
-SYPACK(PACK_ID).module_condition_map = struct( ...
-    'Damaged_BoL',  [2, 19], ...
-    'Healthy_Aged', [3, 20], ...
-    'Damaged_Aged', [4, 11] ...
-);
-
+% Note: This is cell not a SE. E.g., cells 3 & 4 are part of SE 2
 % Damaged cells within each damaged module
-SYPACK(PACK_ID).damaged_cell_per_module_idxs_1_based = [3, 4];
+if PACK_ID==1
+    SYPACK(PACK_ID).module_condition_map = struct( ...
+    'Damaged_BoL',  [2, 19], ...
+    'Damaged_Aged', [4, 11] ...
+    );
+    SYPACK(PACK_ID).damaged_cell_per_module_idxs_1_based = [1,2];
+elseif PACK_ID==2
+    SYPACK(PACK_ID).module_condition_map = struct( ...
+    'Healthy_BoL',  [2, 19] ...
+    );
+    SYPACK(PACK_ID).damaged_cell_per_module_idxs_1_based = [];
+end
+
+% SE indices for damaged cells in the pack
+% dataloader_se_indices_0 = getSEIndices(modules, cells);
 
 % %% Initial SoC
 SYPACK(PACK_ID).SocCell0   = 0.20;
 file_path = fullfile(common_path, 'pack_config.mat');
 save(file_path, 'SYPACK');
+
+%% Helper function
+
+function se_indices_0 = getSEIndicesForDataloader(modules, cells)
+% getSEIndices - Compute 0-based SE indices from module and cell numbers
+%
+% Inputs:
+%   modules - array of module numbers (1-based)
+%   cells   - array of cell numbers within each module (1-based)
+%
+% Output:
+%   se_indices_0 - unique 0-based SE indices
+
+    % Lambda to convert module & cell to SE index (0-based)
+    get_se_index_0 = @(module, cell_num) ((module - 1) * 6) + floor((cell_num - 1) / 2);
+
+    % Create all combinations of modules and cells
+    [mod_grid, cell_grid] = ndgrid(modules, cells);
+
+    % Compute SE indices and get unique
+    se_indices_0 = unique(arrayfun(get_se_index_0, mod_grid(:), cell_grid(:)));
+end
