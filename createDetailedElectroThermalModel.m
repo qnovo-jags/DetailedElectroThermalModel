@@ -14,17 +14,17 @@ if bdIsLoaded(modelName)
 end
 new_system(modelName);
 open_system(modelName);
-load_system(modelName)
+load_system(modelName);
 
 createElectricalModel
 
 load_system('./utils/coolantFlow_lib.slx')
 createThermalModel
 
-electricalToThermal(modelName)
-thermalToElectrical(modelName)
+electricalToThermal(modelName);
+thermalToElectrical(modelName);
 
-addProbesSubsystemGrid(modelName, numModules)
+addProbesSubsystemGrid(modelName, numModules);
 
 set_param(modelName, 'SimscapeLogType', 'all')  
 set_param(modelName, 'FastRestart', 'off');

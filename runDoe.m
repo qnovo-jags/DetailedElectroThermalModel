@@ -21,7 +21,7 @@ metadata_dir = fullfile(project_dir, "metadata");
 %  LOAD PACK CONFIGURATION
 %  ================================
 
-run("./constantThermalParameters.m")
+run("./utils/constantThermalParameters.m")
 config_file = fullfile(metadata_dir, "pack_config.mat");
 fprintf("Loading pack configuration from: %s\n", config_file);
 load(config_file, "SYPACK");
