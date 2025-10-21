@@ -24,7 +24,7 @@ This repository provides a complete workflow to **generate battery pack models**
 
 1. **Create Synthetic Pack Model**
    ```matlab
-   createSyntheticCellPack
+   createDetailedElectroThermalModel
 
 2. **Generate Pack Configurations**
    ```matlab
