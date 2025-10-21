@@ -12,7 +12,7 @@ numModules = 32;
 modelName = 'mainModelDoeJF';
 
 % Set the directories
-project_dir = "./sypack192s2p60ah/SYPACK1";
+project_dir = sprintf("./sypack192s2p60ah/SYPACK%d",PACK_ID);
 sim_dir = fullfile(project_dir, "simulations");
 mat_dir = fullfile(sim_dir, "mat_format");  
 metadata_dir = fullfile(project_dir, "metadata");  
