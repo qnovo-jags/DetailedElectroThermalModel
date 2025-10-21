@@ -56,7 +56,7 @@ Simulation results will be saved into the results/ directory.
 ## 📥 Clone the Repository
 ### Using HTTPS
 ```bash
-git clone [https://github.com/<username>/<repo-name>.git](https://github.com/qnovo-jags/DetailedElectroThermalModel.git)
+[git clone [https://github.com/<username>/<repo-name>.git](https://github.com/qnovo-jags/DetailedElectroThermalModel.git)](https://github.com/qnovo-jags/DetailedElectroThermalModel.git)
 ```
 ### Using SSH (recommended if you have SSH keys)
 ```bash
