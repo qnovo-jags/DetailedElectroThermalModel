@@ -3,7 +3,7 @@
 clc;
 
 % === Output Directory ===
-PACK_ID = 2;
+PACK_ID = 1;
 metadata_dir = sprintf("./sypack192s2p60ah/SYPACK%d/metadata",PACK_ID);
 
 % === User Configuration ===
@@ -15,7 +15,7 @@ chargeCrates = [0.5, 1, 1.5, 2];      % [C-rate]
 restAfterChargeSec = [30*60];         % [s]
 dischargeCrates = 2;                  % [C]
 restAfterDischargeSec = 30*60;        % [s]
-numberOfCycles = 2;                   % [-]
+numberOfCycles = 3;                   % [-]
 ambientTempsKelvin = 273.15 + [25];   % [K]
 
 % === Generate DOE ===
