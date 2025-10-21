@@ -6,17 +6,17 @@ This repository provides a complete workflow to **generate battery pack models**
 
 ## 📁 Repository Structure
 
-| Path / File                         | Description |
-|------------------------------------|-------------|
-| `runDoe.m`                         | **Main entry point.** Runs DOE simulations with configured packs and models. |
-| `createSyntheticCellPack.m`        | Generates a synthetic Simulink battery model using the Battery Builder API. |
-| `generatePackConfigurations.m`     | Builds battery pack configurations (healthy or with damage/fault parameters). |
-| `generateDoeConfirgurations.m`     | Defines DOE simulations (temperature, C-rate, cycling patterns, etc.). |
-| `results/`                         | Stores all simulation output automatically in structured format. |
-| `simulinkModels/`                  | Contains saved Simulink models generated during configuration. |
-| `BatteryGeneration/`               | Battery Builder libraries and resources. |
-| `utils/`                           | Helper utilities for pre-/post-processing and data extraction. |
-| `resources/`                       | Parameter files, templates, or auxiliary reference configurations. |
+| Path / File                           | Description |
+|------------------------------------   |-------------|
+| `runDoe.m`                            | **Main entry point.** Runs DOE simulations with configured packs and models. |
+| `createDetailedElectroThermalModel.m` | Generates a synthetic Simulink battery model using the Battery Builder API. |
+| `generatePackConfigurations.m`        | Builds battery pack configurations (healthy or with damage/fault parameters). |
+| `generateDoeConfirgurations.m`        | Defines DOE simulations (temperature, C-rate, cycling patterns, etc.). |
+| `sypack192s2p60ah/`                   | Stores all simulation output automatically in structured format. |
+| `simulinkModels/`                     | Contains saved Simulink models generated during configuration. |
+| `BatteryGeneration/`                  | Battery Builder libraries and resources. |
+| `utils/`                              | Helper utilities for pre-/post-processing and data extraction. |
+| `resources/`                          | Parameter files, templates, or auxiliary reference configurations. |
 
 ---
 
@@ -66,7 +66,7 @@ git@github.com:qnovo-jags/DetailedElectroThermalModel.git
 ## ▶️ Example Usage
 ```matlab
 % Step 1: Build the model
-createSyntheticCellPack
+createDetailedElectroThermalModel
 
 % Step 2: Configure pack settings
 generatePackConfigurations
