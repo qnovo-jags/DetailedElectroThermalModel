@@ -1,25 +1,32 @@
-%% === DOE Generator Function ===
 function DOE = generateFullFactorialDoeWithRunSequence(outputDir, profileTypes, sampling_rate_s, initialRests, ...
                                                        restBeforeCharge, chargeCrates, restAfterCharge, ...
                                                        dischargeCrates, restAfterDischarge, numberOfCycles, ambientTemps)
     % Generate full factorial DOE configurations with run_sequence
-
     DOE = [];
-    run_sequence = 0;
-
+    
     % Create output directory if missing
     if ~exist(outputDir, 'dir')
         mkdir(outputDir);
     end
 
-    % Iterate through combinations
-    for ptIdx = 1:numel(profileTypes)
-        for atIdx = 1:numel(ambientTemps)
-            run_sequence = run_sequence + 1;
+    % Iterate through ambient temperatures
+    for atIdx = 1:numel(ambientTemps)
+        run_sequence = atIdx;  % run_sequence depends only on ambient temperature
+        T = ambientTemps(atIdx);
+
+        for ptIdx = 1:numel(profileTypes)
+            profile = profileTypes{ptIdx};
+
+            % If AFC, only use first chargeCrate to avoid duplicates
+            if strcmpi(profile, 'AFC')
+                crateList = max(chargeCrates);
+            else
+                crateList = chargeCrates;
+            end
 
             [SF, IR, RBC, CC, RAC, DC, RAD, NC] = ndgrid(1:numel(sampling_rate_s), ...
                 1:numel(initialRests), 1:numel(restBeforeCharge), ...
-                1:numel(chargeCrates), 1:numel(restAfterCharge), ...
+                1:numel(crateList), 1:numel(restAfterCharge), ...
                 1:numel(dischargeCrates), 1:numel(restAfterDischarge), ...
                 1:numel(numberOfCycles));
 
@@ -29,18 +36,18 @@ function DOE = generateFullFactorialDoeWithRunSequence(outputDir, profileTypes, 
                 idx = numel(DOE) + 1;
                 DOE(idx).doe_id = sprintf('doe%d', idx);
                 DOE(idx).run_sequence = run_sequence;
-                DOE(idx).profileType = profileTypes{ptIdx};
+                DOE(idx).profileType = profile;
                 DOE(idx).sampling_rate_s = sampling_rate_s(SF(i));
                 DOE(idx).initial_rest_s = initialRests(IR(i));
                 DOE(idx).rest_before_charge_s = restBeforeCharge(RBC(i));
 
-                crate = chargeCrates(CC(i));
+                crate = crateList(CC(i));
 
-                % Assign depth of charge and discharge based on crate
-                if crate <= 1
+                % Depth of charge based on crate or AFC
+                if strcmpi(profile, 'AFC') || crate <= 1
                     depthOfCharge = 0.85;
                 elseif crate <= 1.75
-                    depthOfCharge = 0.7;
+                    depthOfCharge = 0.70;
                 else
                     depthOfCharge = 0.55;
                 end
@@ -55,7 +62,7 @@ function DOE = generateFullFactorialDoeWithRunSequence(outputDir, profileTypes, 
                 DOE(idx).discharge_crate = dischargeCrates(DC(i));
                 DOE(idx).rest_after_discharge_s = restAfterDischarge(RAD(i));
                 DOE(idx).number_of_cycles = numberOfCycles(NC(i));
-                DOE(idx).ambient_temperature_K = ambientTemps(atIdx);
+                DOE(idx).ambient_temperature_K = T;
             end
         end
     end
