@@ -1,6 +1,6 @@
 # 🚗 Battery Pack Simulation & DOE Automation Toolkit
 
-This repository provides a complete workflow to **generate battery pack models**, **configure simulation parameters**, **automate Design of Experiments (DOE)**, and **run Simulink simulations** efficiently. It is designed for rapid development and analysis of cell and pack-level electrothermal and electrochemical models using MATLAB/Simulink.
+This repository provides a complete workflow to **generate battery pack models**, **configure simulation parameters**, **automate Design of Experiments (DOE)**, and **run Simulink simulations** efficiently. It is designed for rapid development and analysis of cell and pack-level electrothermal and electrochemical models using MATLAB/Simulink. Currently it is only compatible with pack designs similar Sam's Ioniq 5 (NE PE) and uses a synthetic cell sycell_sk603.
 
 ---
 
