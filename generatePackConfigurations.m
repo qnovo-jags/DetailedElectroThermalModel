@@ -2,7 +2,7 @@
 
 %% --- Setup paths ---
 
-PACK_ID = 2;
+PACK_ID = 1;
 common_path = sprintf('sypack192s2p60ah/SYPACK%d/metadata', PACK_ID);
 if ~exist(common_path, 'dir')
     mkdir(common_path);
@@ -67,16 +67,16 @@ profiles.Healthy_BoL.Tau1.std  = 1;
 profiles.Healthy_BoL.SoC.mean  = 0;
 profiles.Healthy_BoL.SoC.std   = 0.005;
 
-profiles.Damaged_BoL.BatteryCapacity.mean = 0;
-profiles.Damaged_BoL.BatteryCapacity.std  = 0.1;
-profiles.Damaged_BoL.R0.mean  = 10;
-profiles.Damaged_BoL.R0.std   = 5;
-profiles.Damaged_BoL.R1.mean  = 10;
-profiles.Damaged_BoL.R1.std   = 5;
-profiles.Damaged_BoL.Tau1.mean = 10;
-profiles.Damaged_BoL.Tau1.std  = 5;
-profiles.Damaged_BoL.SoC.mean  = 0.02;
-profiles.Damaged_BoL.SoC.std   = 0.01;
+profiles.Damaged_BoL.BatteryCapacity.mean = 0; % percent deviation
+profiles.Damaged_BoL.BatteryCapacity.std  = 0.1; % percent deviation
+profiles.Damaged_BoL.R0.mean  = 20; % percent deviation
+profiles.Damaged_BoL.R0.std   = 5; % percent deviation
+profiles.Damaged_BoL.R1.mean  = 20; % percent deviation
+profiles.Damaged_BoL.R1.std   = 5; % percent deviation
+profiles.Damaged_BoL.Tau1.mean = 20; % percent deviation
+profiles.Damaged_BoL.Tau1.std  = 5; % percent deviation
+profiles.Damaged_BoL.SoC.mean  = 0.02; % absolute deviation
+profiles.Damaged_BoL.SoC.std   = 0.01; % absolute deviation
 
 profiles.Healthy_Aged.BatteryCapacity.mean = -10;
 profiles.Healthy_Aged.BatteryCapacity.std  = 2;
@@ -89,16 +89,16 @@ profiles.Healthy_Aged.Tau1.std  = 3;
 profiles.Healthy_Aged.SoC.mean  = 0;
 profiles.Healthy_Aged.SoC.std   = 0.005;
 
-profiles.Damaged_Aged.BatteryCapacity.mean = -15;
-profiles.Damaged_Aged.BatteryCapacity.std  = 5;
-profiles.Damaged_Aged.R0.mean  = 15;
-profiles.Damaged_Aged.R0.std   = 5;
-profiles.Damaged_Aged.R1.mean  = 15;
-profiles.Damaged_Aged.R1.std   = 5;
-profiles.Damaged_Aged.Tau1.mean = 15;
-profiles.Damaged_Aged.Tau1.std  = 5;
-profiles.Damaged_Aged.SoC.mean  = 0.03;
-profiles.Damaged_Aged.SoC.std   = 0.01;
+profiles.Damaged_Aged.BatteryCapacity.mean = -15; % percent deviation
+profiles.Damaged_Aged.BatteryCapacity.std  = 5; % percent deviation
+profiles.Damaged_Aged.R0.mean  = 25; % percent deviation
+profiles.Damaged_Aged.R0.std   = 5; % percent deviation
+profiles.Damaged_Aged.R1.mean  = 25; % percent deviation
+profiles.Damaged_Aged.R1.std   = 5; % percent deviation
+profiles.Damaged_Aged.Tau1.mean = 25; % percent deviation
+profiles.Damaged_Aged.Tau1.std  = 5; % percent deviation
+profiles.Damaged_Aged.SoC.mean  = 0.03; % absolute deviation
+profiles.Damaged_Aged.SoC.std   = 0.01; % absolute deviation
 
 % Store the damage profile
 SYPACK(PACK_ID).damage_profiles = profiles;

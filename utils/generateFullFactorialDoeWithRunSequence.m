@@ -44,9 +44,9 @@ function DOE = generateFullFactorialDoeWithRunSequence(outputDir, profileTypes, 
                 crate = crateList(CC(i));
 
                 % Depth of charge based on crate or AFC
-                if strcmpi(profile, 'AFC') || crate <= 1
+                if crate <= 1
                     depthOfCharge = 0.85;
-                elseif crate <= 1.75
+                elseif strcmpi(profile, 'AFC') || crate <= 1.75
                     depthOfCharge = 0.70;
                 else
                     depthOfCharge = 0.55;

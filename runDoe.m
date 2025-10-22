@@ -42,7 +42,7 @@ fprintf("Loaded DOE configuration for SYPACK%d successfully.\n", PACK_ID);
 is_qnovo_format = 1;  % 1: "[I1,I2,...]" format, 0 for expanded format
 all_run_sequences = unique([DOE.run_sequence]);
 totalTimer = tic;  % start total timer
-mySYPACK = SYPACK;
+mySYPACK = SYPACK(PACK_ID);
 
 for seqIdx = 1:length(all_run_sequences)
     
