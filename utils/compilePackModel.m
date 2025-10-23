@@ -74,23 +74,32 @@ for module = 1:numModules
     tau1_dev     = generateDeviations(numCells, healthyProf.Tau1.mean, healthyProf.Tau1.std);
     soc0         = SYPACK.SocCell0 + generateDeviations(numCells, healthyProf.SoC.mean, healthyProf.SoC.std);
     
-    % Loop over each profile in module_condition_map
+    % Loop through all profiles for the current module
     profile_names = fieldnames(SYPACK.module_condition_map);
+    
     for k = 1:numel(profile_names)
         modules_in_profile = SYPACK.module_condition_map.(profile_names{k});
+    
+        % Check if the current module is affected by this profile
         if ismember(module, modules_in_profile)
-            % Only override the cells listed in damaged_cell_per_module_idxs_1_based
             prof_override = SYPACK.damage_profiles.(profile_names{k});
+    
+            % Apply deviations to all damaged cells in this module
             damaged_cells = SYPACK.damaged_cell_per_module_idxs_1_based;
+    
             for c = 1:length(damaged_cells)
                 cell_idx = damaged_cells(c);
+    
+                % Overwrite deviations with damage profile for this cell
                 capacity_dev(cell_idx) = generateDeviations(1, prof_override.BatteryCapacity.mean, prof_override.BatteryCapacity.std);
                 r0_dev(cell_idx)       = generateDeviations(1, prof_override.R0.mean, prof_override.R0.std);
                 r1_dev(cell_idx)       = generateDeviations(1, prof_override.R1.mean, prof_override.R1.std);
                 tau1_dev(cell_idx)     = generateDeviations(1, prof_override.Tau1.mean, prof_override.Tau1.std);
-                soc0(cell_idx)         = soc0(cell_idx) + generateDeviations(1, prof_override.SoC.mean, prof_override.SoC.std);
+                
+                % For SOC, you can either overwrite or accumulate deviations
+                % Here we overwrite to reflect the damaged profile
+                soc0(cell_idx)         = SYPACK.SocCell0 + generateDeviations(1, prof_override.SoC.mean, prof_override.SoC.std);
             end
-            break; % stop after first matching profile
         end
     end
 

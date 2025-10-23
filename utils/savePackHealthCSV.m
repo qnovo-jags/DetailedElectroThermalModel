@@ -1,5 +1,5 @@
 function savePackHealthCSV(filename, capacity_devs, r0_devs, r1_devs, tau1_devs, soc0s, SYPACK)
-%SAVEPACKHEALTHCSV Save pack health deviations with cell labels and profiles
+%SAVEPACKHEALTHCSV Save pack health deviations with cell labels, SE indices, and profiles
 %
 % Inputs:
 %   filename        : string, path to save CSV
@@ -43,19 +43,33 @@ tau1_flat     = reshape(tau1_devs', 1, []);
 soc0_flat     = reshape(soc0s', 1, []);
 cell_profiles_flat = reshape(cell_profiles', 1, []);
 
-% Create cell labels
+% Create cell labels and SE indices
 cell_labels = strings(1, numModules*numCells);
+SE_indices = zeros(1, numModules*numCells);
+
 idx = 1;
+cells_per_SE = 2;  % number of cells per SE
+SE_counter = 1;    % global SE index
+
 for m = 1:numModules
     for c = 1:numCells
         cell_labels(idx) = sprintf('Module%02d_Cell%02d', m, c);
+        
+        % Assign global SE index
+        SE_indices(idx) = SE_counter;
+        
+        % Increment SE index every 'cells_per_SE' cells
+        if mod(c, cells_per_SE) == 0
+            SE_counter = SE_counter + 1;
+        end
+        
         idx = idx + 1;
     end
 end
 
 % Create table
-T = table(cell_labels', cell_profiles_flat', capacity_flat', r0_flat', r1_flat', tau1_flat', soc0_flat', ...
-          'VariableNames', {'CellLabel','Profile','Capacity','R0','R1','Tau1','SOC'});
+T = table(cell_labels', cell_profiles_flat', SE_indices', capacity_flat', r0_flat', r1_flat', tau1_flat', soc0_flat', ...
+          'VariableNames', {'CellLabel','Profile','SE_Index_1based','Capacity','R0','R1','Tau1','SOC'});
 
 % Save to CSV
 writetable(T, filename);

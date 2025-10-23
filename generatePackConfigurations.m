@@ -56,49 +56,79 @@ fprintf('Saved pack parameters JSON: %s\n', packParamFile);
 % =========================================
 profiles = struct();
 
-profiles.Healthy_BoL.BatteryCapacity.mean = 0;
-profiles.Healthy_BoL.BatteryCapacity.std  = 0.1;
-profiles.Healthy_BoL.R0.mean  = 0;
-profiles.Healthy_BoL.R0.std   = 1;
-profiles.Healthy_BoL.R1.mean  = 0;
-profiles.Healthy_BoL.R1.std   = 1;
-profiles.Healthy_BoL.Tau1.mean = 0;
-profiles.Healthy_BoL.Tau1.std  = 1;
-profiles.Healthy_BoL.SoC.mean  = 0;
-profiles.Healthy_BoL.SoC.std   = 0.005;
+% Note: These are percentage deviations in RC cell model parameter
 
-profiles.Damaged_BoL.BatteryCapacity.mean = 0; % percent deviation
-profiles.Damaged_BoL.BatteryCapacity.std  = 0.1; % percent deviation
-profiles.Damaged_BoL.R0.mean  = 20; % percent deviation
-profiles.Damaged_BoL.R0.std   = 5; % percent deviation
-profiles.Damaged_BoL.R1.mean  = 20; % percent deviation
-profiles.Damaged_BoL.R1.std   = 5; % percent deviation
-profiles.Damaged_BoL.Tau1.mean = 20; % percent deviation
-profiles.Damaged_BoL.Tau1.std  = 5; % percent deviation
-profiles.Damaged_BoL.SoC.mean  = 0.02; % absolute deviation
-profiles.Damaged_BoL.SoC.std   = 0.01; % absolute deviation
+% Type 0: Healthy_BoL
+profiles.Healthy_BoL.BatteryCapacity.mean = 0; % percent deviation
+profiles.Healthy_BoL.BatteryCapacity.std  = 0.26; % percent deviation, 0.27% * 58.38 / 0.60
+profiles.Healthy_BoL.R0.mean  = 0; % percent deviation
+profiles.Healthy_BoL.R0.std   = 2.26; % percent deviation
+profiles.Healthy_BoL.R1.mean  = 0; % percent deviation
+profiles.Healthy_BoL.R1.std   = 0; % percent deviation
+profiles.Healthy_BoL.Tau1.mean = 0; % percent deviation
+profiles.Healthy_BoL.Tau1.std  = 0; % percent deviation
+profiles.Healthy_BoL.SoC.mean  = 0; % absolute deviation
+profiles.Healthy_BoL.SoC.std   = 0.003; % absolute deviation
 
-profiles.Healthy_Aged.BatteryCapacity.mean = -10;
-profiles.Healthy_Aged.BatteryCapacity.std  = 2;
-profiles.Healthy_Aged.R0.mean  = 5;
-profiles.Healthy_Aged.R0.std   = 3;
-profiles.Healthy_Aged.R1.mean  = 5;
-profiles.Healthy_Aged.R1.std   = 3;
-profiles.Healthy_Aged.Tau1.mean = 5;
-profiles.Healthy_Aged.Tau1.std  = 3;
-profiles.Healthy_Aged.SoC.mean  = 0;
-profiles.Healthy_Aged.SoC.std   = 0.005;
+% Type 1: Capacity lower by 1.9%
+profiles.Damaged_Type1.BatteryCapacity.mean = -1.9; % percent deviation
+profiles.Damaged_Type1.BatteryCapacity.std  = 0; % percent deviation
+profiles.Damaged_Type1.R0.mean  = 0; % percent deviation
+profiles.Damaged_Type1.R0.std   = 2.26; % percent deviation
+profiles.Damaged_Type1.R1.mean  = 0; % percent deviation
+profiles.Damaged_Type1.R1.std   = 0; % percent deviation
+profiles.Damaged_Type1.Tau1.mean = 0; % percent deviation
+profiles.Damaged_Type1.Tau1.std  = 0; % percent deviation
+profiles.Damaged_Type1.SoC.mean  = 0; % absolute deviation
+profiles.Damaged_Type1.SoC.std   = 0.003; % absolute deviation
 
-profiles.Damaged_Aged.BatteryCapacity.mean = -15; % percent deviation
-profiles.Damaged_Aged.BatteryCapacity.std  = 5; % percent deviation
-profiles.Damaged_Aged.R0.mean  = 25; % percent deviation
-profiles.Damaged_Aged.R0.std   = 5; % percent deviation
-profiles.Damaged_Aged.R1.mean  = 25; % percent deviation
-profiles.Damaged_Aged.R1.std   = 5; % percent deviation
-profiles.Damaged_Aged.Tau1.mean = 25; % percent deviation
-profiles.Damaged_Aged.Tau1.std  = 5; % percent deviation
-profiles.Damaged_Aged.SoC.mean  = 0.03; % absolute deviation
-profiles.Damaged_Aged.SoC.std   = 0.01; % absolute deviation
+% Type 2: Capacity lower by 0.95%
+profiles.Damaged_Type2.BatteryCapacity.mean = -0.95; % percent deviation
+profiles.Damaged_Type2.BatteryCapacity.std  = 0; % percent deviation
+profiles.Damaged_Type2.R0.mean  = 0; % percent deviation
+profiles.Damaged_Type2.R0.std   = 2.26; % percent deviation
+profiles.Damaged_Type2.R1.mean  = 0; % percent deviation
+profiles.Damaged_Type2.R1.std   = 0; % percent deviation
+profiles.Damaged_Type2.Tau1.mean = 0; % percent deviation
+profiles.Damaged_Type2.Tau1.std  = 0; % percent deviation
+profiles.Damaged_Type2.SoC.mean  = 0; % absolute deviation
+profiles.Damaged_Type2.SoC.std   = 0.003; % absolute deviation
+
+% Type 3: Higher R0 by 14%
+profiles.Damaged_Type3.BatteryCapacity.mean = 0; % percent deviation
+profiles.Damaged_Type3.BatteryCapacity.std  = 0.26; % percent deviation
+profiles.Damaged_Type3.R0.mean  = 14; % percent deviation
+profiles.Damaged_Type3.R0.std   = 0; % percent deviation
+profiles.Damaged_Type3.R1.mean  = 0; % percent deviation
+profiles.Damaged_Type3.R1.std   = 0; % percent deviation
+profiles.Damaged_Type3.Tau1.mean = 0; % percent deviation
+profiles.Damaged_Type3.Tau1.std  = 0; % percent deviation
+profiles.Damaged_Type3.SoC.mean  = 0; % absolute deviation
+profiles.Damaged_Type3.SoC.std   = 0.003; % absolute deviation
+
+% Type 4: Higher R0 by 7%
+profiles.Damaged_Type4.BatteryCapacity.mean = 0; % percent deviation
+profiles.Damaged_Type4.BatteryCapacity.std  = 0.26; % percent deviation
+profiles.Damaged_Type4.R0.mean  = 7; % percent deviation
+profiles.Damaged_Type4.R0.std   = 0; % percent deviation
+profiles.Damaged_Type4.R1.mean  = 0; % percent deviation
+profiles.Damaged_Type4.R1.std   = 0; % percent deviation
+profiles.Damaged_Type4.Tau1.mean = 0; % percent deviation
+profiles.Damaged_Type4.Tau1.std  = 0; % percent deviation
+profiles.Damaged_Type4.SoC.mean  = 0; % absolute deviation
+profiles.Damaged_Type4.SoC.std   = 0.003; % absolute deviation
+
+% Type 5: SoC0 lower by 7%
+profiles.Damaged_Type5.BatteryCapacity.mean = 0; % percent deviation
+profiles.Damaged_Type5.BatteryCapacity.std  = 0.26; % percent deviation
+profiles.Damaged_Type5.R0.mean  = 0; % percent deviation
+profiles.Damaged_Type5.R0.std   = 2.26; % percent deviation
+profiles.Damaged_Type5.R1.mean  = 0; % percent deviation
+profiles.Damaged_Type5.R1.std   = 0; % percent deviation
+profiles.Damaged_Type5.Tau1.mean = 0; % percent deviation
+profiles.Damaged_Type5.Tau1.std  = 0; % percent deviation
+profiles.Damaged_Type5.SoC.mean  = -0.07; % absolute deviation
+profiles.Damaged_Type5.SoC.std   = 0; % absolute deviation
 
 % Store the damage profile
 SYPACK(PACK_ID).damage_profiles = profiles;
@@ -106,24 +136,48 @@ SYPACK(PACK_ID).damage_profiles = profiles;
 % =========================================
 % Assign modules and cells per condition
 % =========================================
-
-if PACK_ID==1
-    SYPACK(PACK_ID).module_condition_map = struct( ...
-        'Damaged_BoL',  [2, 19], ...
-        'Damaged_Aged', [4, 11] ...
-    );
-    % Damaged cells within each damaged module
-    SYPACK(PACK_ID).damaged_cell_per_module_idxs_1_based = [1, 2];
-elseif PACK_ID==2
-    SYPACK(PACK_ID).module_condition_map = struct( ...
-        'Healthy_BoL',  [2, 19] ...
-    );
-    % Damaged cells within each damaged module
-    SYPACK(PACK_ID).damaged_cell_per_module_idxs_1_based = [];
-end
+SYPACK(PACK_ID).module_condition_map = struct( ...
+    'Damaged_Type1', 2, ...
+    'Damaged_Type2', 4, ...
+    'Damaged_Type3', 11, ...
+    'Damaged_Type4', 19, ...
+    'Damaged_Type5', 25 ...
+);
+SYPACK(PACK_ID).damaged_cell_per_module_idxs_1_based = [1, 2];  
 
 
 % %% Initial SoC
-SYPACK(PACK_ID).SocCell0   = 0.20;
+SYPACK(PACK_ID).SocCell0   = 0.10;
 file_path = fullfile(common_path, 'pack_config.mat');
 save(file_path, 'SYPACK');
+
+
+%%
+
+cells_per_module = 12;                  % 12 cells per module
+damaged_cell_idxs = SYPACK(PACK_ID).damaged_cell_per_module_idxs_1_based;  % 1-based
+
+module_map = SYPACK(PACK_ID).module_condition_map;
+all_damaged_indices = [];
+
+damage_types = fieldnames(module_map);
+
+for k = 1:length(damage_types)
+    modules = module_map.(damage_types{k});
+    for m = 1:length(modules)
+        module_num = modules(m);  % 1-based module index
+        % Compute global 1-based cell indices
+        global_cells_1_based = (module_num-1)*cells_per_module + damaged_cell_idxs;
+        all_damaged_indices = [all_damaged_indices, global_cells_1_based];
+    end
+end
+
+% Remove duplicates and sort
+all_damaged_indices = unique(all_damaged_indices);
+
+% Convert 1-based cells to 0-based SEs (each SE = 2 cells)
+damaged_SEs_0_based = floor((all_damaged_indices - 1) / 2);  % 0-based
+damaged_SEs_0_based = unique(damaged_SEs_0_based);
+
+disp('Damaged SE indices (0-based):');
+disp(damaged_SEs_0_based);
