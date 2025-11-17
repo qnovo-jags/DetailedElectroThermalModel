@@ -156,7 +156,6 @@ save(file_path, 'SYPACK');
 
 cells_per_module = 12;                  % 12 cells per module
 damaged_cell_idxs = SYPACK(PACK_ID).damaged_cell_per_module_idxs_1_based;  % 1-based
-
 module_map = SYPACK(PACK_ID).module_condition_map;
 all_damaged_indices = [];
 
