@@ -35,11 +35,13 @@ data_filePath = fullfile('./data', "hmc_poc_fast_1_cycles.csv");
 % data_filePath = fullfile('./data', "hmc_poc_fast_10_cycles.csv");
 
 data = readtable(data_filePath);
+fastcurrentData = [round(data.time_s), round(data.se_currents_A)];  % 2-column matrix: first column = time,
 
-currentData = [round(data.time_s), round(data.se_currents_A)];  % 2-column matrix: first column = time,
-% ambient_temperature_K = 25 + 273.15;
+doe_config_file = fullfile(metadata_dir, "doe_config.mat");
+fprintf("Loading DOE configuration from: %s\n", doe_config_file);
+load(doe_config_file, "DOE");
+fprintf("Loaded DOE configuration for SYPACK%d successfully.\n", PACK_ID);
 
-ambient_temperatures = 273.15 + [10, 15, 20, 25, 30, 35, 40];
 
 %% Run DOE and log results
 
@@ -47,23 +49,25 @@ ambient_temperatures = 273.15 + [10, 15, 20, 25, 30, 35, 40];
 is_qnovo_format = 1;  % 1: "[I1,I2,...]" format, 0 for expanded format
 totalTimer = tic;  % start total timer
 mySYPACK = SYPACK(PACK_ID);
-
+all_run_sequences = unique([DOE.run_sequence]);
 num_cycles = 1;
 
-% % --- Initialize model for this run sequence
-initTimer = tic;
+for seqIdx = 1:length(all_run_sequences)
+    
+    % --- Identify the targer run sequence
+    target_sequence = all_run_sequences(seqIdx);
+    fprintf("\n=== Running sequence %d/%d ===\n", target_sequence, length(all_run_sequences));
 
-customInitializationAndRun(modelName, currentData, ambient_temperatures, mySYPACK, sim_dir);
-% customDoeFastRestartLoop(modelName, currentData, ambient_temperature_K, sim_dir, num_cycles)
+    % % --- Initialize model for this run sequence
+    initTimer = tic;
+    customInitializationAndRun(modelName, DOE, target_sequence, mySYPACK, sim_dir);
+    fprintf("Initialization completed in %.2f seconds\n", toc(initTimer));
+    
+    % --- Run fast restart loop to simulate all DOEs in this sequence
+    loopTimer = tic;
+    customDoeFastRestartLoop(modelName, DOE, target_sequence, CellNominalCapacityAh, numParallelCells, sim_dir);
+    fprintf("Completed run_sequence %d in %.2f seconds\n", target_sequence, toc(loopTimer));
+    
+end
 
 fprintf("\nRun completed successfully in %.2f seconds!\n", toc(initTimer));
-
-%%
-
-% load("/Users/jagmohanfanshal/Desktop/Qnovo/matlab_repos/tech_team_pack_modeling/DetailedElectroThermalModel/sypack192s2p60ah/SYPACK1/simulations/mat_format/doe1.mat")
-% simout = se_data.simout;
-
-% data = simout.batteryTemperature_Module1;
-data = simout.socCell_Module1;
-
-plot(data.time, squeeze(data.signals.values));
