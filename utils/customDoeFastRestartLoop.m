@@ -45,9 +45,8 @@ function customDoeFastRestartLoop(modelName, myDOE, target_sequence, CellNominal
         simout = sim(in);
 
         % Extract SE data and save CSVs
-        simulation_results.(target_id) = extractSeDataProbe(simout, output_dir, target_id, is_qnovo_format, selectedDOE.sampling_rate_s);
+        extractSeDataProbe(simout, output_dir, target_id, is_qnovo_format, selectedDOE.sampling_rate_s);
 
-        fprintf("DOE %s completed and saved.\n", target_id);
-        fprintf("DOE %d completed in %.2f seconds\n", length(filtered_DOE), toc(doeTimer));
+        fprintf("DOE %s completed in %.2f seconds\n", target_id, toc(doeTimer));
     end
 end
