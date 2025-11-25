@@ -15,7 +15,7 @@ function simout = customInitializationAndRun(modelName, myDOE, target_sequence, 
     ambient_temperature_K = selectedDOE.ambient_temperature_K;
 
     % Extract current input
-    currentData = 0;
+    currentData = [0,0];
 
     open_system(modelName);
     compilePackModel(SYPACK, ambient_temperature_K);
@@ -27,9 +27,7 @@ function simout = customInitializationAndRun(modelName, myDOE, target_sequence, 
     set_param(modelName, 'FastRestart', 'off');
     
     % % Set tolerances and max step size
-    % set_param(modelName, 'FastRestart', 'off');
-    % set_param(modelName, 'Solver', 'ode15s', 'RelTol', '1e-5', ...
-    %     'AbsTol', '1e-6', 'MaxStep', '10');
+    set_param(modelName, 'Solver', 'daessc', 'RelTol', '1e-3', 'MaxStep', '0.1');
 
     % Setup Simulink simulation input
     in = Simulink.SimulationInput(modelName);

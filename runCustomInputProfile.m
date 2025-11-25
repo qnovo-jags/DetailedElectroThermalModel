@@ -32,8 +32,6 @@ fprintf("Loaded configuration for SYPACK%d successfully.\n", PACK_ID);
 % =================================
 
 data_filePath = fullfile('./data', "hmc_poc_fast_1_cycles.csv");
-% data_filePath = fullfile('./data', "hmc_poc_fast_10_cycles.csv");
-
 data = readtable(data_filePath);
 fastcurrentData = [round(data.time_s), round(data.se_currents_A)];  % 2-column matrix: first column = time,
 

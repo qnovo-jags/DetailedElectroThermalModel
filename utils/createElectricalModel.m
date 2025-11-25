@@ -60,7 +60,7 @@ currentProfile = [modelName, '/currentProfile'];
 add_block('simulink/Sources/From Workspace', currentProfile, ...
     "Position", [95,  -120,   145,   -90]);
 set_param(currentProfile, "VariableName", 'currentData') 
-set_param(currentProfile, "SampleTime", '10') 
+% set_param(currentProfile, "SampleTime", '10') 
 set_param(currentProfile, 'ShowName', 'off');
 currentProfiletoSimscape = [modelName, '/currentProfiletoSimscape'];
 add_block('nesl_utility/Simulink-PS Converter', currentProfiletoSimscape,...
