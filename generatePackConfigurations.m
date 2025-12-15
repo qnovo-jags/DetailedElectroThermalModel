@@ -2,7 +2,7 @@
 
 %% --- Setup paths ---
 
-PACK_ID = 1;
+PACK_ID = 2;
 common_path = sprintf('sypack192s2p60ah/SYPACK%d/metadata', PACK_ID);
 if ~exist(common_path, 'dir')
     mkdir(common_path);

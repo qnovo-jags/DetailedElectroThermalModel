@@ -72,7 +72,17 @@ for module = 1:numModules
     r0_dev       = generateDeviations(numCells, healthyProf.R0.mean, healthyProf.R0.std);
     r1_dev       = generateDeviations(numCells, healthyProf.R1.mean, healthyProf.R1.std);
     tau1_dev     = generateDeviations(numCells, healthyProf.Tau1.mean, healthyProf.Tau1.std);
-    soc0         = SYPACK.SocCell0 + generateDeviations(numCells, healthyProf.SoC.mean, healthyProf.SoC.std);
+    soc_dev      = generateDeviations(numCells, healthyProf.SoC.mean, healthyProf.SoC.std);
+
+    % Clip values to 
+    capacity_dev = max(min(capacity_dev, 100), -100);
+    r0_dev   = max(min(r0_dev, 100), -100);
+    r1_dev   = max(min(r1_dev, 100), -100);
+    tau1_dev = max(min(tau1_dev, 100), -100);
+    soc_dev  = max(min(soc_dev, 1), -1);
+
+    % Initial SoC
+    soc0         = SYPACK.SocCell0 + soc_dev;
     
     % Loop through all profiles for the current module
     profile_names = fieldnames(SYPACK.module_condition_map);
@@ -95,10 +105,17 @@ for module = 1:numModules
                 r0_dev(cell_idx)       = generateDeviations(1, prof_override.R0.mean, prof_override.R0.std);
                 r1_dev(cell_idx)       = generateDeviations(1, prof_override.R1.mean, prof_override.R1.std);
                 tau1_dev(cell_idx)     = generateDeviations(1, prof_override.Tau1.mean, prof_override.Tau1.std);
+                soc_dev(cell_idx)      = generateDeviations(1, prof_override.SoC.mean, prof_override.SoC.std);
+
+                capacity_dev(cell_idx) = max(min(capacity_dev(cell_idx), 100), -100);
+                r0_dev(cell_idx)       = max(min(r0_dev(cell_idx), 100), -100);
+                r1_dev(cell_idx)       = max(min(r1_dev(cell_idx), 100), -100);
+                tau1_dev(cell_idx)     = max(min(tau1_dev(cell_idx), 100), -100);
+                soc_dev(cell_idx)      = max(min(soc_dev(cell_idx), 1), -1);
                 
                 % For SOC, you can either overwrite or accumulate deviations
                 % Here we overwrite to reflect the damaged profile
-                soc0(cell_idx)         = SYPACK.SocCell0 + generateDeviations(1, prof_override.SoC.mean, prof_override.SoC.std);
+                soc0(cell_idx)         = SYPACK.SocCell0 + soc_dev(cell_idx);
             end
         end
     end

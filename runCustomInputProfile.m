@@ -5,7 +5,7 @@ close all
 
 %% --- Load constants and setup ---
 
-PACK_ID = 1;
+PACK_ID = 2;
 CellNominalCapacityAh = 60;
 numParallelCells = 2;
 numModules = 32;
