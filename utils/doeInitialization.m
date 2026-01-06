@@ -45,7 +45,7 @@ function doeInitialization(modelName, myDOE, target_sequence, ...
     set_param(modelName, 'FastRestart', 'off');
     
     % % Set tolerances and max step size
-    set_param(modelName, 'Solver', 'daessc', 'RelTol', '1e-3', 'MaxStep', '0.1');
+    set_param(modelName, 'Solver', 'daessc', 'RelTol', '1e-3', 'MaxStep', '1');
 
     % Setup Simulink simulation input
     in = Simulink.SimulationInput(modelName);

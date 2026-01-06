@@ -7,15 +7,17 @@ PACK_ID = 3;
 metadata_dir = sprintf("./sypack192s2p60ah/SYPACK%d/metadata",PACK_ID);
 
 % === User Configuration ===
+starting_soc_charge = 0.10; % 0.10 less than the cycle starting soc
+
 profileTypes = {'AFC'};               % 'AFC' or 'Step'
 sampling_rate_s = 1;                  % [Hz]
-initialRestSec = 300;                 % [s]
+initialRestSec = 200;                 % [s]
 restBeforeChargeSec = [10, 30, 45, 60, 100, 180, 600, 30*60];        % [s]
-chargeCrates = [0.5, 1, 1.5, 2];      % [C-rate]
+chargeCrates = [2];      % [C-rate]
 depth_of_charge = [0.20, 0.30, 0.40, 0.50, 0.60]; % [-]
 restAfterChargeSec = [10, 30, 45, 60, 100, 180, 600, 30*60];         % [s]
 dischargeCrates = 2;                  % [C]
-restAfterDischargeSec = 30*60;        % [s]
+restAfterDischargeSec = 10*60;        % [s]
 numberOfCycles = 1;                   % [-]
 ambientTempsKelvin = 273.15 + [25];   % [K]
 
@@ -23,7 +25,7 @@ ambientTempsKelvin = 273.15 + [25];   % [K]
 DOE = generateFullFactorialDoeWithRunSequence(metadata_dir, ...
     profileTypes, sampling_rate_s, initialRestSec, ...
     restBeforeChargeSec, chargeCrates, restAfterChargeSec, ...
-    dischargeCrates, restAfterDischargeSec, numberOfCycles, ambientTempsKelvin);
+    dischargeCrates, restAfterDischargeSec, numberOfCycles, ambientTempsKelvin, starting_soc_charge);
 
 
 %% 2. Generate custom profiles for AFC

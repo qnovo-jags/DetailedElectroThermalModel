@@ -5,7 +5,7 @@ close all
 
 %% --- Load constants and setup ---
 
-PACK_ID = 2;
+PACK_ID = 3;
 CellNominalCapacityAh = 60;
 numParallelCells = 2;
 numModules = 32;
@@ -28,18 +28,18 @@ load(config_file, "SYPACK");
 fprintf("Loaded configuration for SYPACK%d successfully.\n", PACK_ID);
 
 %% ================================
-% Load the custom current profile
-% =================================
-
-data_filePath = fullfile('./data', "hmc_poc_fast_1_cycles.csv");
-data = readtable(data_filePath);
-fastcurrentData = [round(data.time_s), round(data.se_currents_A)];  % 2-column matrix: first column = time,
-
-doe_config_file = fullfile(metadata_dir, "doe_config.mat");
-fprintf("Loading DOE configuration from: %s\n", doe_config_file);
-load(doe_config_file, "DOE");
-fprintf("Loaded DOE configuration for SYPACK%d successfully.\n", PACK_ID);
-
+% % Load the custom current profile
+% % =================================
+% 
+% data_filePath = fullfile('./data', "hmc_poc_fast_1_cycles.csv");
+% data = readtable(data_filePath);
+% fastcurrentData = [round(data.time_s), round(data.se_currents_A)];  % 2-column matrix: first column = time,
+% 
+% doe_config_file = fullfile(metadata_dir, "doe_config.mat");
+% fprintf("Loading DOE configuration from: %s\n", doe_config_file);
+% load(doe_config_file, "DOE");
+% fprintf("Loaded DOE configuration for SYPACK%d successfully.\n", PACK_ID);
+% 
 
 %% Run DOE and log results
 

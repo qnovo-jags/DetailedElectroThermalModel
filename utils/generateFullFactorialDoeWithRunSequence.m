@@ -1,6 +1,6 @@
 function DOE = generateFullFactorialDoeWithRunSequence(outputDir, profileTypes, sampling_rate_s, initialRests, ...
                                                        restBeforeCharge, chargeCrates, restAfterCharge, ...
-                                                       dischargeCrates, restAfterDischarge, numberOfCycles, ambientTemps)
+                                                       dischargeCrates, restAfterDischarge, numberOfCycles, ambientTemps, starting_soc_charge)
     % Generate full factorial DOE configurations with run_sequence
     DOE = [];
     
@@ -75,6 +75,7 @@ function DOE = generateFullFactorialDoeWithRunSequence(outputDir, profileTypes, 
                 DOE(idx).rest_after_discharge_s = restAfterDischarge(RAD(i));
                 DOE(idx).number_of_cycles = numberOfCycles(NC(i));
                 DOE(idx).ambient_temperature_K = T;
+                DOE(idx).starting_soc_charge = starting_soc_charge;
             end
         end
     end
