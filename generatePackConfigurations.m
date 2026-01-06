@@ -2,7 +2,9 @@
 
 %% --- Setup paths ---
 
-PACK_ID = 2;
+PACK_ID = 3;
+starting_soc = 0.20; % 0.30, 0.40, 0.50 -> starting charge SOC is 0.10 less 
+
 common_path = sprintf('sypack192s2p60ah/SYPACK%d/metadata', PACK_ID);
 if ~exist(common_path, 'dir')
     mkdir(common_path);
@@ -147,7 +149,7 @@ SYPACK(PACK_ID).damaged_cell_per_module_idxs_1_based = [1, 2];
 
 
 % %% Initial SoC
-SYPACK(PACK_ID).SocCell0   = 0.10;
+SYPACK(PACK_ID).SocCell0   = starting_soc;
 file_path = fullfile(common_path, 'pack_config.mat');
 save(file_path, 'SYPACK');
 
