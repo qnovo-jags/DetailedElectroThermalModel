@@ -1,5 +1,5 @@
 % %% ------------------------------------------------------------------------
-function simout = customInitializationAndRun(modelName, myDOE, target_sequence, SYPACK, output_dir)
+function simout = customInitializationAndRun(modelName, myDOE, target_sequence, SYPACK, output_dir, PACK_ID)
 % run_doe_initialization
 % One-time model initialization using the first DOE in a given run_sequence
 %
@@ -18,7 +18,7 @@ function simout = customInitializationAndRun(modelName, myDOE, target_sequence, 
     currentData = [0,0];
 
     open_system(modelName);
-    compilePackModel(SYPACK, ambient_temperature_K);
+    compilePackModel(SYPACK, ambient_temperature_K, PACK_ID);
 
     % Assign currentData to base workspace
     assignin("base", "currentData", currentData);

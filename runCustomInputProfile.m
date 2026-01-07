@@ -5,7 +5,7 @@ close all
 
 %% --- Load constants and setup ---
 
-PACK_ID = 3;
+PACK_ID = 5;
 CellNominalCapacityAh = 60;
 numParallelCells = 2;
 numModules = 32;
@@ -35,11 +35,10 @@ fprintf("Loaded configuration for SYPACK%d successfully.\n", PACK_ID);
 % data = readtable(data_filePath);
 % fastcurrentData = [round(data.time_s), round(data.se_currents_A)];  % 2-column matrix: first column = time,
 % 
-% doe_config_file = fullfile(metadata_dir, "doe_config.mat");
-% fprintf("Loading DOE configuration from: %s\n", doe_config_file);
-% load(doe_config_file, "DOE");
-% fprintf("Loaded DOE configuration for SYPACK%d successfully.\n", PACK_ID);
-% 
+doe_config_file = fullfile(metadata_dir, "doe_config.mat");
+fprintf("Loading DOE configuration from: %s\n", doe_config_file);
+load(doe_config_file, "DOE");
+fprintf("Loaded DOE configuration for SYPACK%d successfully.\n", PACK_ID);
 
 %% Run DOE and log results
 
@@ -58,7 +57,7 @@ for seqIdx = 1:length(all_run_sequences)
 
     % % --- Initialize model for this run sequence
     initTimer = tic;
-    customInitializationAndRun(modelName, DOE, target_sequence, mySYPACK, sim_dir);
+    customInitializationAndRun(modelName, DOE, target_sequence, mySYPACK, sim_dir, PACK_ID);
     fprintf("Initialization completed in %.2f seconds\n", toc(initTimer));
     
     % --- Run fast restart loop to simulate all DOEs in this sequence

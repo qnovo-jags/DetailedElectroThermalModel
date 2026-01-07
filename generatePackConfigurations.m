@@ -2,8 +2,8 @@
 
 %% --- Setup paths ---
 
-PACK_ID = 3;
-starting_soc = 0.20; % 0.20, 0.30, 0.40, 0.50 -> starting charge SOC is 0.10 less 
+PACK_ID = 5;
+starting_soc = 0.40; % 0.20, 0.30, 0.40, 0.50 -> starting charge SOC is 0.10 less 
 
 common_path = sprintf('sypack192s2p60ah/SYPACK%d/metadata', PACK_ID);
 if ~exist(common_path, 'dir')

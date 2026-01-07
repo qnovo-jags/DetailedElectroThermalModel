@@ -3,11 +3,11 @@
 clc;
 
 % === Output Directory ===
-PACK_ID = 3;
+PACK_ID = 5;
 metadata_dir = sprintf("./sypack192s2p60ah/SYPACK%d/metadata",PACK_ID);
 
 % === User Configuration ===
-starting_soc_charge = 0.10; % 0.10 less than the cycle starting soc
+starting_soc_charge = 0.30; % 0.10 less than the cycle starting soc
 
 profileTypes = {'AFC'};               % 'AFC' or 'Step'
 sampling_rate_s = 1;                  % [Hz]
