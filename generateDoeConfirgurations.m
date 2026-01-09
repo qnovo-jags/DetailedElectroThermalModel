@@ -14,7 +14,7 @@ sampling_rate_s = 1;                  % [Hz]
 initialRestSec = 200;                 % [s]
 restBeforeChargeSec = [10, 30, 45, 60, 100, 180, 600, 30*60];        % [s]
 chargeCrates = [2];      % [C-rate]
-depth_of_charge = [0.20, 0.30, 0.40, 0.50, 0.60]; % [-]
+depthOfCharge = [0.20, 0.30, 0.40, 0.50]; % [-]
 restAfterChargeSec = [10, 30, 45, 60, 100, 180, 600, 30*60];         % [s]
 dischargeCrates = 2;                  % [C]
 restAfterDischargeSec = 10*60;        % [s]
@@ -25,7 +25,8 @@ ambientTempsKelvin = 273.15 + [25];   % [K]
 DOE = generateFullFactorialDoeWithRunSequence(metadata_dir, ...
     profileTypes, sampling_rate_s, initialRestSec, ...
     restBeforeChargeSec, chargeCrates, restAfterChargeSec, ...
-    dischargeCrates, restAfterDischargeSec, numberOfCycles, ambientTempsKelvin, starting_soc_charge);
+    dischargeCrates, restAfterDischargeSec, numberOfCycles, ...
+    ambientTempsKelvin, starting_soc_charge, depthOfCharge);
 
 
 %% 2. Generate custom profiles for AFC

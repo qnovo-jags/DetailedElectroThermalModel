@@ -1,39 +1,56 @@
-function DOE = generateFullFactorialDoeWithRunSequence(outputDir, profileTypes, sampling_rate_s, initialRests, ...
-                                                       restBeforeCharge, chargeCrates, restAfterCharge, ...
-                                                       dischargeCrates, restAfterDischarge, numberOfCycles, ambientTemps, starting_soc_charge)
-    % Generate full factorial DOE configurations with run_sequence
+function DOE = generateFullFactorialDoeWithRunSequence( ...
+        outputDir, profileTypes, sampling_rate_s, initialRests, ...
+        restBeforeCharge, chargeCrates, restAfterCharge, ...
+        dischargeCrates, restAfterDischarge, numberOfCycles, ...
+        ambientTemps, starting_soc_charge, depthOfCharge)
+
     DOE = [];
-    
-    % Create output directory if missing
+
+    % ---- depthOfCharge handling ----
+    if nargin < 13 || isempty(depthOfCharge)
+        useAutoDepthOfCharge = true;
+        depthOfCharge = NaN;   % placeholder for ndgrid
+    else
+        validateattributes(depthOfCharge, {'numeric'}, ...
+            {'vector','>',0,'<',1}, mfilename, 'depthOfCharge');
+        useAutoDepthOfCharge = false;
+    end
+
     if ~exist(outputDir, 'dir')
         mkdir(outputDir);
     end
 
-    % Iterate through ambient temperatures
     for atIdx = 1:numel(ambientTemps)
-        run_sequence = atIdx;  % run_sequence depends only on ambient temperature
+        run_sequence = atIdx;
         T = ambientTemps(atIdx);
 
         for ptIdx = 1:numel(profileTypes)
             profile = profileTypes{ptIdx};
 
-            % If AFC, only use first chargeCrate to avoid duplicates
+            % AFC uses only max C-rate
             if strcmpi(profile, 'AFC')
                 crateList = max(chargeCrates);
             else
                 crateList = chargeCrates;
             end
 
-            [SF, IR, RBC, CC, RAC, DC, RAD, NC] = ndgrid(1:numel(sampling_rate_s), ...
-                1:numel(initialRests), 1:numel(restBeforeCharge), ...
-                1:numel(crateList), 1:numel(restAfterCharge), ...
-                1:numel(dischargeCrates), 1:numel(restAfterDischarge), ...
+            % ---- Full factorial grid ----
+            [SF, IR, RBC, CC, DOC, RAC, DC, RAD, NC] = ndgrid( ...
+                1:numel(sampling_rate_s), ...
+                1:numel(initialRests), ...
+                1:numel(restBeforeCharge), ...
+                1:numel(crateList), ...
+                1:numel(depthOfCharge), ...
+                1:numel(restAfterCharge), ...
+                1:numel(dischargeCrates), ...
+                1:numel(restAfterDischarge), ...
                 1:numel(numberOfCycles));
 
             totalComb = numel(SF);
 
             for i = 1:totalComb
                 idx = numel(DOE) + 1;
+
                 DOE(idx).doe_id = sprintf('doe%d', idx);
                 DOE(idx).run_sequence = run_sequence;
                 DOE(idx).profileType = profile;
@@ -42,33 +59,23 @@ function DOE = generateFullFactorialDoeWithRunSequence(outputDir, profileTypes, 
                 DOE(idx).rest_before_charge_s = restBeforeCharge(RBC(i));
 
                 crate = crateList(CC(i));
+                DOE(idx).charge_crate = crate;
 
-                % Depth of charge based on crate or AFC
-                if exist('depthOfCharge', 'var') && ...
-                   isnumeric(depthOfCharge) && ...
-                   isscalar(depthOfCharge) && ...
-                   ~isempty(depthOfCharge) && ...
-                   ~isnan(depthOfCharge)
-                    % User explicitly provided a valid depthOfCharge → use as-is
-                
-                else
-                    % Compute depthOfCharge automatically
+                % ---- Depth of Charge logic ----
+                if useAutoDepthOfCharge
                     if crate <= 1
-                        depthOfCharge = 0.85;
-                
+                        doc = 0.85;
                     elseif strcmpi(profile, 'AFC') || crate <= 1.75
-                        depthOfCharge = 0.70;
-                
+                        doc = 0.70;
                     else
-                        depthOfCharge = 0.55;
+                        doc = 0.55;
                     end
+                else
+                    doc = depthOfCharge(DOC(i));
                 end
 
-                depthOfDischarge = depthOfCharge - 0.10;
-
-                DOE(idx).charge_crate = crate;
-                DOE(idx).depth_of_charge = depthOfCharge;
-                DOE(idx).depth_of_discharge = depthOfDischarge;
+                DOE(idx).depth_of_charge = doc;
+                DOE(idx).depth_of_discharge = doc - 0.10;
 
                 DOE(idx).rest_after_charge_s = restAfterCharge(RAC(i));
                 DOE(idx).discharge_crate = dischargeCrates(DC(i));
@@ -80,7 +87,7 @@ function DOE = generateFullFactorialDoeWithRunSequence(outputDir, profileTypes, 
         end
     end
 
-    % === Save Outputs ===
+    % ---- Save outputs ----
     DOE_table = struct2table(DOE);
     csvFile = fullfile(outputDir, 'doe_config.csv');
     matFile = fullfile(outputDir, 'doe_config.mat');
@@ -88,5 +95,6 @@ function DOE = generateFullFactorialDoeWithRunSequence(outputDir, profileTypes, 
     writetable(DOE_table, csvFile);
     save(matFile, 'DOE');
 
-    fprintf('✅ DOE configuration saved:\n   • CSV: %s\n   • MAT: %s\n', csvFile, matFile);
+    fprintf('✅ DOE configuration saved:\n   • CSV: %s\n   • MAT: %s\n', ...
+        csvFile, matFile);
 end
